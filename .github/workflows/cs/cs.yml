@@ -1,0 +1,17 @@
+# предлагаю в этом файле описать  логику выбора Trivy/Grype.
+# В соответствии с тем, что используем, то и выбираем в качестве 
+# actions. На вход условия подаем имя репозитория, а на вход action
+# передаем список образов
+
+jobs:
+  # условие
+  # choose:
+    # if: ...
+
+    steps:
+      - uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: 'ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ inputs.GITHUB_REF }}'
+          format: 'template'
+          template: "@$HOME/.local/bin/trivy-bin/contrib/html.tp"
+          output: ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}-${{ inputs.GITHUB_REF }}.html
