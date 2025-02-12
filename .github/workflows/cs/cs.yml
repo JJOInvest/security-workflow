@@ -3,6 +3,16 @@
 # actions. На вход условия подаем имя репозитория, а на вход action
 # передаем список образов
 
+on:
+  workflow_call:
+    inputs:
+      GITHUB_REF:
+        type: string
+        required: true
+      SERVICE_NAME:
+        type: string
+        required: true
+
 jobs:
   # условие
   # choose:
