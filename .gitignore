@@ -1,5 +1,5 @@
 **/.DS_Store
-.github/workflows/cs/analyze
+.github/actions/cs/analyze
 scope.md
 flow.md
 changelog.md
