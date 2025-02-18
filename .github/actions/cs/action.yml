@@ -3,15 +3,13 @@
 # actions. На вход условия подаем имя репозитория, а на вход action
 # передаем список образов
 
-on:
-  workflow_call:
-    inputs:
-      GITHUB_REF:
-        type: string
-        required: true
-      SERVICE_NAME:
-        type: string
-        required: true
+inputs:
+  GITHUB_REF:
+    type: string
+    required: true
+  SERVICE_NAME:
+    type: string
+    required: true
 
 runs:
   using: 'composite'
@@ -19,12 +17,15 @@ runs:
     - name: Debug input values
       run: echo "SERVICE_NAME=${{ inputs.SERVICE_NAME }}, GITHUB_REF=${{ inputs.GITHUB_REF }}"
       shell: bash
+    # - uses: actions/checkout@v4.1.7
+    #   with:
+    #     fetch-depth: 1
     - name: Run Trivy
-      uses: aquasecurity/trivy-action@0.28.0
+      uses: aquasecurity/trivy-action@0.29.0
       with:
         image-ref: 'ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:test-cs-load'
         format: 'template'
-        template: "@$GITHUB_ACTION_PATH//html.tpl"
+        template: "@$GITHUB_WORKSPACE/.cache/trivy/contrib/html.tpl"
         output: test.html
     - name: Upload Trivy Report
       uses: actions/upload-artifact@v4
