@@ -16,6 +16,9 @@ on:
 runs:
   using: 'composite'
   steps:
+    - name: Debug input values
+      run: echo "SERVICE_NAME=${{ inputs.SERVICE_NAME }}, GITHUB_REF=${{ inputs.GITHUB_REF }}"
+      shell: bash
     - name: Run Trivy
       uses: aquasecurity/trivy-action@0.28.0
       with:
