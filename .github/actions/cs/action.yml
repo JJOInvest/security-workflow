@@ -25,7 +25,7 @@ runs:
       with:
         image-ref: 'ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:test-cs-load'
         format: 'template'
-        template: "@$GITHUB_WORKSPACE/.cache/trivy/contrib/html.tpl"
+        template: "@$HOME/.local/bin/trivy-bin/contrib/html.tpl"
         output: test.html
     - name: Upload Trivy Report
       uses: actions/upload-artifact@v4
