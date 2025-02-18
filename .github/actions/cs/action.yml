@@ -26,6 +26,10 @@ runs:
         format: 'template'
         template: "./html.tpl"
         output: test.html
+    - name: Check Trivy report
+      run: |
+        cat test.html
+      shell: bash
     - name: Upload Trivy Report
       uses: actions/upload-artifact@v4
       with:
