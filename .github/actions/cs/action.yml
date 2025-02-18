@@ -28,6 +28,11 @@ runs:
         output: test.html
     - name: Check Trivy report
       run: |
+        ls -la
+        ls -la $HOME
+        ls -la $HOME/.local/bin/trivy-bin
+        ls -la $HOME/.local/bin/
+        ls -la $HOME/.local/
         cat test.html
       shell: bash
     - name: Upload Trivy Report
