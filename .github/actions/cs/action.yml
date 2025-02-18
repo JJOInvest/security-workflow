@@ -26,4 +26,5 @@ runs:
         image-ref: 'ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:test-cs-load'
         format: 'template'
         template: "@$HOME/.local/bin/trivy-bin/contrib/html.tp"
-        output: ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}-${{ inputs.GITHUB_REF }}.html
+        # output: ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}-${{ inputs.GITHUB_REF }}.html
+        output: test.html
