@@ -27,7 +27,7 @@ runs:
         template: "./html.tpl"
         output: test.html
     - name: Upload Trivy Report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: trivy-report
         path: test.html
