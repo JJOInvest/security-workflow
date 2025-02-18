@@ -13,12 +13,11 @@ on:
         type: string
         required: true
 
-jobs:
-  # условие
-  # choose:
-    # if: ...
-  trivy:  
-    uses: aquasecurity/trivy-action@0.28.0
+runs:
+  using: 'composite'
+  steps:
+    - name: Run Trivy
+      uses: aquasecurity/trivy-action@0.28.0
       with:
         image-ref: 'ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ inputs.GITHUB_REF }}'
         format: 'template'
