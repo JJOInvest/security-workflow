@@ -26,7 +26,7 @@ runs:
     - name: Check Trivy installation
       run: |
         echo "Checking Trivy installation..."
-        ls -la $HOME/.local/bin/trivy-bin
+        ls -la $HOME/.local/bin/trivy-bin/trivy
         which trivy
       shell: bash
     - name: Check template file
