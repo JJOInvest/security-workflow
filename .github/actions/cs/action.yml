@@ -24,7 +24,7 @@ runs:
       with:
         image-ref: 'ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:test-cs-load'
         format: 'template'
-        template: "./html.tpl"
+        template: "@./html.tpl"
         output: test.html
     - name: Check Trivy report
       run: |
