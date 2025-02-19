@@ -29,6 +29,6 @@ runs:
     - name: Upload Trivy Report
       uses: actions/upload-artifact@v4
       with:
-        name: trivy-report
+        name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_branch.outputs.branch }}
         path: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_branch.outputs.branch }}.html
         shell: bash
