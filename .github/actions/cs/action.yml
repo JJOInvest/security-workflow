@@ -18,12 +18,6 @@ runs:
     #   shell: bash
     #   run: echo "branch=${GITHUB_HEAD_REF:-${{ inputs.GITHUB_REF }}}" >> $GITHUB_OUTPUT
     #   id: extract_branch
-    - name: Login to GitHub Container Registry
-      uses: docker/login-action@v3.3.0
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Run Trivy (JSON report)
       uses: aquasecurity/trivy-action@0.29.0
