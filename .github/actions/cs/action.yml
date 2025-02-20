@@ -50,7 +50,7 @@ runs:
 
         if [[ $found -eq 1 ]]; then
           echo "Scanning image from repository $GITHUB_REPOSITORY with $scan_tool."
-          echo "scan_tool={$scan_tool}" >> $GITHUB_OUTPUT
+          echo "scan_tool=$scan_tool" >> $GITHUB_OUTPUT
         else
           echo "For this repo image scan is not required!"
           echo "If you want to scan image from this repo, please add it in the appropriate file:"
