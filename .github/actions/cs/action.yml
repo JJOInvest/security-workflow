@@ -46,4 +46,6 @@ runs:
         name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_branch.outputs.branch }}-html
         path: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_branch.outputs.branch }}.html
         retention-days: 1
-        
+    - name: Test var
+      run: |
+        echo $GITHUB_REPOSITORY
