@@ -49,3 +49,4 @@ runs:
     - name: Test var
       run: |
         echo $GITHUB_REPOSITORY
+      shell: bash
