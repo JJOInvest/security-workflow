@@ -24,14 +24,14 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - uses: actions/checkout@v4.1.7
-      with:
-        repository: JJOInvest/security-workflow
-        token: ${{ secrets.GH_PAT }}
-        sparse-checkout: |
-          repos
-        path: parse_repos
-        fetch-depth: 1
+    # - uses: actions/checkout@v4.1.7
+    #   with:
+    #     repository: JJOInvest/security-workflow
+    #     token: ${{ secrets.GH_PAT }}
+    #     sparse-checkout: |
+    #       repos
+    #     path: parse_repos
+    #     fetch-depth: 1
 
     - name: Set tool for scanning
       shell: bash
