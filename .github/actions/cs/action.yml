@@ -3,48 +3,47 @@
 # actions. На вход условия подаем имя репозитория, а на вход action
 # передаем список образов
 
-# inputs:
-#   GITHUB_REF:
-#     type: string
-#     required: true
-#   SERVICE_NAME:
-#     type: string
-#     required: true
+inputs:
+  GITHUB_REF:
+    type: string
+    required: true
+  SERVICE_NAME:
+    type: string
+    required: true
 
 runs:
   using: 'composite'
   steps:
-    # - name: Extract branch name
-    #   shell: bash
-    #   run: echo "branch=${GITHUB_HEAD_REF:-${{ inputs.GITHUB_REF }}}" >> $GITHUB_OUTPUT
-    #   id: extract_branch
+    - name: Extract branch name
+      shell: bash
+      run: echo "branch=${GITHUB_HEAD_REF:-${{ inputs.GITHUB_REF }}}" >> $GITHUB_OUTPUT
+      id: extract_branch
 
     - name: Run Trivy (JSON report)
       uses: aquasecurity/trivy-action@0.29.0
       with:
-        # image-ref: "ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_branch.outputs.branch }}"
-        image-ref: "ghcr.io/jjoinvest/${{ github.event.repository.name }}:${{ github.ref_name }}-${{ github.event.inputs.stand }}"
+        image-ref: "ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_branch.outputs.branch }}"
         format: "json"
-        output: "${{ github.event.repository.name }}-${{ github.ref_name }}-${{ github.event.inputs.stand }}.json"
+        output: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_branch.outputs.branch }}.json"
     - name: Upload Trivy (JSON report)
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ github.event.repository.name }}-${{ github.ref_name }}-${{ github.event.inputs.stand }}-json
-        path: ${{ github.event.repository.name }}-${{ github.ref_name }}-${{ github.event.inputs.stand }}.json
+        name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_branch.outputs.branch }}-json
+        path: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_branch.outputs.branch }}.json
         retention-days: 1
 
     - name: Run Trivy (HTML report)
       uses: aquasecurity/trivy-action@0.29.0
       with:
-        image-ref: "ghcr.io/jjoinvest/${{ github.event.repository.name }}:${{ github.ref_name }}-${{ github.event.inputs.stand }}"
+        image-ref: "ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_branch.outputs.branch }}"
         format: "template"
         template: "@$HOME/.local/bin/trivy-bin/contrib/html.tpl"
-        output: "${{ github.event.repository.name }}-${{ github.ref_name }}-${{ github.event.inputs.stand }}.html"
+        output: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_branch.outputs.branch }}.html"
         skip-setup-trivy: true
     - name: Upload Trivy (HTML report)
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ github.event.repository.name }}-${{ github.ref_name }}-${{ github.event.inputs.stand }}-html
-        path: ${{ github.event.repository.name }}-${{ github.ref_name }}}-${{ github.event.inputs.stand }}.html
+        name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_branch.outputs.branch }}-html
+        path: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_branch.outputs.branch }}.html
         retention-days: 1
         
