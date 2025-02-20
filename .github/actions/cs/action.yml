@@ -23,28 +23,28 @@ runs:
       uses: aquasecurity/trivy-action@0.29.0
       with:
         # image-ref: "ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_branch.outputs.branch }}"
-        image-ref: "ghcr.io/jjoinvest/${{ github.event.repository.name }}:${{ github.ref_name }}"
+        image-ref: "ghcr.io/jjoinvest/${{ github.event.repository.name }}:${{ github.ref_name }}-${{ github.event.inputs.stand }}"
         format: "json"
-        output: "${{ github.event.repository.name }}-${{ github.ref_name }}.json"
+        output: "${{ github.event.repository.name }}-${{ github.ref_name }}-${{ github.event.inputs.stand }}.json"
     - name: Upload Trivy (JSON report)
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ github.event.repository.name }}-${{ github.ref_name }}-json
-        path: ${{ github.event.repository.name }}-${{ github.ref_name }}.json
+        name: ${{ github.event.repository.name }}-${{ github.ref_name }}-${{ github.event.inputs.stand }}-json
+        path: ${{ github.event.repository.name }}-${{ github.ref_name }}-${{ github.event.inputs.stand }}.json
         retention-days: 1
 
     - name: Run Trivy (HTML report)
       uses: aquasecurity/trivy-action@0.29.0
       with:
-        image-ref: "ghcr.io/jjoinvest/${{ github.event.repository.name }}:${{ github.ref_name }}"
+        image-ref: "ghcr.io/jjoinvest/${{ github.event.repository.name }}:${{ github.ref_name }}-${{ github.event.inputs.stand }}"
         format: "template"
         template: "@$HOME/.local/bin/trivy-bin/contrib/html.tpl"
-        output: "${{ github.event.repository.name }}-${{ github.ref_name }}.html"
+        output: "${{ github.event.repository.name }}-${{ github.ref_name }}-${{ github.event.inputs.stand }}.html"
         skip-setup-trivy: true
     - name: Upload Trivy (HTML report)
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ github.event.repository.name }}-${{ github.ref_name }}-html
-        path: ${{ github.event.repository.name }}-${{ github.ref_name }}}.html
+        name: ${{ github.event.repository.name }}-${{ github.ref_name }}-${{ github.event.inputs.stand }}-html
+        path: ${{ github.event.repository.name }}-${{ github.ref_name }}}-${{ github.event.inputs.stand }}.html
         retention-days: 1
         
