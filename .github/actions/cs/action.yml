@@ -11,21 +11,83 @@ inputs:
     type: string
     required: true
 
+# repos_for_trivy_scan=("JJOInvest/backtest-service-java" \
+#                       "JJOInvest/activity-service-java" \
+#                       "JJOInvest/access-token-service"
+#                       "JJOInvest/tron-connector" \
+#                       "JJOInvest/jjo-invest-backend-v2")
+
+# repos_for_grype_scan=("JJOInvest/exchange-connector-service-js" \
+#                       "JJOInvest/jjo-slack-bot" \
+#                       "JJOInvest/coop-landing-v2")
+
 runs:
   using: 'composite'
   steps:
+    - uses: actions/checkout@v4.1.7
+      with:
+        repository: JJOInvest/security-workflow
+        sparse-checkout: |
+          repos
+        path: parse_repos
+        fetch-depth: 1
+
+    - name: Set tool for scanning
+      shell: bash
+      run: |
+        # Чтение списков репозиториев для сканирования
+        readarray -t repos_for_trivy_scan < ./parse_repos/trivy_repos.conf
+        readarray -t repos_for_grype_scan < ./parse_repos/grype_repos.conf
+
+        # Переменная для хранения инструмента сканирования
+        scan_tool=""
+        found=0
+
+        # Проверка, нужно ли сканировать текущий репозиторий с помощью Trivy
+        for repo in "${repos_for_trivy_scan[@]}"; do
+          if [[ "$repo" == "$GITHUB_REPOSITORY" ]]; then
+            found=1
+            scan_tool="trivy"
+            break
+          fi
+        done
+
+        # Если репозиторий не найден в списке для Trivy, проверяем Grype
+        if [[ $found -eq 0 ]]; then
+          for repo in "${repos_for_grype_scan[@]}"; do
+            if [[ "$repo" == "$GITHUB_REPOSITORY" ]]; then
+              found=1
+              scan_tool="grype"
+              break
+            fi
+          done
+        fi
+
+        # Вывод результата
+        if [[ $found -eq 1 ]]; then
+          echo "Scanning repository $GITHUB_REPOSITORY with $scan_tool."
+          echo "scan_tool={$scan_tool}" >> $GITHUB_OUTPUT
+        else
+          echo "For this repo image scan is not required!"
+          echo "If you want to scan image from this repo, please add it in the appropriate file:"
+          echo "https://github.com/JJOInvest/security-workflow/tree/main"
+        fi
+      id: tool_for_scanning
+
     - name: Extract branch name
       shell: bash
       run: echo "branch=${GITHUB_HEAD_REF:-${{ inputs.GITHUB_REF }}}" >> $GITHUB_OUTPUT
       id: extract_branch
 
     - name: Run Trivy (JSON report)
+      if: steps.tool_for_scanning.outputs.scan_tool == "trivy"
       uses: aquasecurity/trivy-action@0.29.0
       with:
         image-ref: "ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_branch.outputs.branch }}"
         format: "json"
         output: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_branch.outputs.branch }}.json"
     - name: Upload Trivy (JSON report)
+      if: steps.tool_for_scanning.outputs.scan_tool == "trivy"
       uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_branch.outputs.branch }}-json
@@ -33,6 +95,7 @@ runs:
         retention-days: 1
 
     - name: Run Trivy (HTML report)
+      if: steps.tool_for_scanning.outputs.scan_tool == "trivy"
       uses: aquasecurity/trivy-action@0.29.0
       with:
         image-ref: "ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_branch.outputs.branch }}"
@@ -41,12 +104,15 @@ runs:
         output: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_branch.outputs.branch }}.html"
         skip-setup-trivy: true
     - name: Upload Trivy (HTML report)
+      if: steps.tool_for_scanning.outputs.scan_tool == "trivy"
       uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_branch.outputs.branch }}-html
         path: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_branch.outputs.branch }}.html
         retention-days: 1
+
     - name: Test var
+      if: steps.tool_for_scanning.outputs.scan_tool == "grype"
       run: |
-        echo $GITHUB_REPOSITORY
+        echo "Hello Grype"
       shell: bash
