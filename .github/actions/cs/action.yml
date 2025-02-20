@@ -17,22 +17,19 @@ runs:
     - name: Set tool for scanning
       shell: bash
       run: |
-        # Чтение списков репозиториев для сканирования
         repos_for_trivy_scan=("JJOInvest/backtest-service-java" \
                               "JJOInvest/activity-service-java" \
                               "JJOInvest/access-token-service"
-                              "JJOInvest/tron-connector")
+                              "JJOInvest/tron-connector" \
+                              "JJOInvest/jjo-invest-backend-v2")
 
         repos_for_grype_scan=("JJOInvest/exchange-connector-service-js" \
                               "JJOInvest/jjo-slack-bot" \
-                              "JJOInvest/coop-landing-v2" \
-                              "JJOInvest/jjo-invest-backend-v2")
+                              "JJOInvest/coop-landing-v2")
 
-        # Переменная для хранения инструмента сканирования
         scan_tool=""
         found=0
 
-        # Проверка, нужно ли сканировать текущий репозиторий с помощью Trivy
         for repo in "${repos_for_trivy_scan[@]}"; do
           if [[ "$repo" == "$GITHUB_REPOSITORY" ]]; then
             found=1
@@ -41,7 +38,6 @@ runs:
           fi
         done
 
-        # Если репозиторий не найден в списке для Trivy, проверяем Grype
         if [[ $found -eq 0 ]]; then
           for repo in "${repos_for_grype_scan[@]}"; do
             if [[ "$repo" == "$GITHUB_REPOSITORY" ]]; then
@@ -52,9 +48,8 @@ runs:
           done
         fi
 
-        # Вывод результата
         if [[ $found -eq 1 ]]; then
-          echo "Scanning repository $GITHUB_REPOSITORY with $scan_tool."
+          echo "Scanning image from repository $GITHUB_REPOSITORY with $scan_tool."
           echo "scan_tool={$scan_tool}" >> $GITHUB_OUTPUT
         else
           echo "For this repo image scan is not required!"
@@ -69,14 +64,14 @@ runs:
       id: extract_branch
 
     - name: Run Trivy (JSON report)
-      if: ${{ steps.tool_for_scanning.outputs.scan_tool == 'trivy' }}
+      if: steps.tool_for_scanning.outputs.scan_tool == 'trivy'
       uses: aquasecurity/trivy-action@0.29.0
       with:
         image-ref: "ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_branch.outputs.branch }}"
         format: "json"
         output: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_branch.outputs.branch }}.json"
     - name: Upload Trivy (JSON report)
-      if: ${{ steps.tool_for_scanning.outputs.scan_tool == 'trivy' }}
+      if: steps.tool_for_scanning.outputs.scan_tool == 'trivy'
       uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_branch.outputs.branch }}-json
@@ -84,7 +79,7 @@ runs:
         retention-days: 1
 
     - name: Run Trivy (HTML report)
-      if: ${{ steps.tool_for_scanning.outputs.scan_tool == 'trivy' }}
+      if: steps.tool_for_scanning.outputs.scan_tool == 'trivy'
       uses: aquasecurity/trivy-action@0.29.0
       with:
         image-ref: "ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_branch.outputs.branch }}"
@@ -93,7 +88,7 @@ runs:
         output: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_branch.outputs.branch }}.html"
         skip-setup-trivy: true
     - name: Upload Trivy (HTML report)
-      if: ${{ steps.tool_for_scanning.outputs.scan_tool == 'trivy' }}
+      if: steps.tool_for_scanning.outputs.scan_tool == 'trivy'
       uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_branch.outputs.branch }}-html
@@ -101,7 +96,7 @@ runs:
         retention-days: 1
 
     - name: Test var
-      if: ${{ steps.tool_for_scanning.outputs.scan_tool == 'grype' }}
+      if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
       run: |
         echo "Hello Grype"
       shell: bash
