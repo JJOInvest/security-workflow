@@ -80,14 +80,14 @@ runs:
       id: extract_branch
 
     - name: Run Trivy (JSON report)
-      if: steps.tool_for_scanning.outputs.scan_tool == "trivy"
+      if: ${{ steps.tool_for_scanning.outputs.scan_tool == 'trivy' }}
       uses: aquasecurity/trivy-action@0.29.0
       with:
         image-ref: "ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_branch.outputs.branch }}"
         format: "json"
         output: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_branch.outputs.branch }}.json"
     - name: Upload Trivy (JSON report)
-      if: steps.tool_for_scanning.outputs.scan_tool == "trivy"
+      if: ${{ steps.tool_for_scanning.outputs.scan_tool == 'trivy' }}
       uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_branch.outputs.branch }}-json
@@ -95,7 +95,7 @@ runs:
         retention-days: 1
 
     - name: Run Trivy (HTML report)
-      if: steps.tool_for_scanning.outputs.scan_tool == "trivy"
+      if: ${{ steps.tool_for_scanning.outputs.scan_tool == 'trivy' }}
       uses: aquasecurity/trivy-action@0.29.0
       with:
         image-ref: "ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_branch.outputs.branch }}"
@@ -104,7 +104,7 @@ runs:
         output: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_branch.outputs.branch }}.html"
         skip-setup-trivy: true
     - name: Upload Trivy (HTML report)
-      if: steps.tool_for_scanning.outputs.scan_tool == "trivy"
+      if: ${{ steps.tool_for_scanning.outputs.scan_tool == 'trivy' }}
       uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_branch.outputs.branch }}-html
@@ -112,7 +112,7 @@ runs:
         retention-days: 1
 
     - name: Test var
-      if: steps.tool_for_scanning.outputs.scan_tool == "grype"
+      if: ${{ steps.tool_for_scanning.outputs.scan_tool == 'grype' }}
       run: |
         echo "Hello Grype"
       shell: bash
