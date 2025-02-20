@@ -27,6 +27,7 @@ runs:
     - uses: actions/checkout@v4.1.7
       with:
         repository: JJOInvest/security-workflow
+        token: ${{ secrets.GH_PAT }}
         sparse-checkout: |
           repos
         path: parse_repos
@@ -36,8 +37,15 @@ runs:
       shell: bash
       run: |
         # Чтение списков репозиториев для сканирования
-        readarray -t repos_for_trivy_scan < ./parse_repos/trivy_repos.conf
-        readarray -t repos_for_grype_scan < ./parse_repos/grype_repos.conf
+        repos_for_trivy_scan=("JJOInvest/backtest-service-java" \
+                              "JJOInvest/activity-service-java" \
+                              "JJOInvest/access-token-service"
+                              "JJOInvest/tron-connector" \
+                              "JJOInvest/jjo-invest-backend-v2")
+
+        repos_for_grype_scan=("JJOInvest/exchange-connector-service-js" \
+                              "JJOInvest/jjo-slack-bot" \
+                              "JJOInvest/coop-landing-v2")
 
         # Переменная для хранения инструмента сканирования
         scan_tool=""
