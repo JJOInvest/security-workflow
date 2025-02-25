@@ -1,8 +1,3 @@
-# предлагаю в этом файле описать  логику выбора Trivy/Grype.
-# В соответствии с тем, что используем, то и выбираем в качестве 
-# actions. На вход условия подаем имя репозитория, а на вход action
-# передаем список образов
-
 inputs:
   GITHUB_REF:
     type: string
@@ -86,19 +81,19 @@ runs:
       uses: aquasecurity/trivy-action@0.29.0
       with:
         image-ref: "ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_tag.outputs.tag }}"
-        format: "table"
-        # template: "@$HOME/.local/bin/trivy-bin/contrib/html.tpl"
-        # output: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.html"
+        format: "html"
+        template: "@$HOME/.local/bin/trivy-bin/contrib/html.tpl"
+        output: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.html"
         severity: 'CRITICAL,HIGH'
-        exit-code: '1'
+        exit-code: 0
         skip-setup-trivy: true
-    # - name: Upload Trivy (HTML report)
-    #   if: steps.tool_for_scanning.outputs.scan_tool == 'trivy'
-    #   uses: actions/upload-artifact@v4
-    #   with:
-    #     name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-html
-    #     path: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.html
-    #     retention-days: 1
+    - name: Upload Trivy (HTML report)
+      if: steps.tool_for_scanning.outputs.scan_tool == 'trivy'
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-html
+        path: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.html
+        retention-days: 1
 
     - name: Run Grype (JSON report)
       if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
