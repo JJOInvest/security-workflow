@@ -93,54 +93,54 @@ runs:
         path: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.html
         retention-days: 1
 
-    - name: Download Grype
-      if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
-      uses: anchore/scan-action/download-grype@v3
-      id: grype
-    - name: Run Grype (JSON & Text reports)
-      if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
-      shell: bash
-      run: |
-        ${{steps.grype.outputs.cmd}} -o json \
-          --file ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json \
-          ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_tag.outputs.tag }}
+    # - name: Download Grype
+    #   if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
+    #   uses: anchore/scan-action/download-grype@v3
+    #   id: grype
+    # - name: Run Grype (JSON & Text reports)
+    #   if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
+    #   shell: bash
+    #   run: |
+    #     ${{steps.grype.outputs.cmd}} -o json \
+    #       --file ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json \
+    #       ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_tag.outputs.tag }}
         
-        ${{steps.grype.outputs.cmd}} -o table \
-          --file ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.txt \
-          ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_tag.outputs.tag }}
+    #     ${{steps.grype.outputs.cmd}} -o table \
+    #       --file ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.txt \
+    #       ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_tag.outputs.tag }}
 
-        cat ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.txt
+    #     cat ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.txt
 
-    # - name: Run Grype (JSON report)
-    #   if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
-    #   uses: anchore/scan-action@v6
-    #   with:
-    #     image: "ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_tag.outputs.tag }}"
-    #     output-format: "json"
-    #     output-file: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json"
-    #     fail-build: "false"
-    # - name: Upload Grype (JSON report)
-    #   if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
-    #   uses: actions/upload-artifact@v4
-    #   with:
-    #     name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-json
-    #     path: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json
-    #     retention-days: 1
-    # - name: Run Grype (Text report)
-    #   if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
-    #   uses: anchore/scan-action@v6
-    #   with:
-    #     image: "ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_tag.outputs.tag }}"
-    #     output-format: "table"
-    #     output-file: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.txt"
-    #     fail-build: "false"
-    # - name: Upload Grype (Text report)
-    #   if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
-    #   uses: actions/upload-artifact@v4
-    #   with:
-    #     name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-txt
-    #     path: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.txt
-    #     retention-days: 1
+    - name: Run Grype (JSON report)
+      if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
+      uses: anchore/scan-action@v6
+      with:
+        image: "ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_tag.outputs.tag }}"
+        output-format: "json"
+        output-file: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json"
+        fail-build: "false"
+    - name: Upload Grype (JSON report)
+      if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-json
+        path: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json
+        retention-days: 1
+    - name: Run Grype (Text report)
+      if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
+      uses: anchore/scan-action@v6
+      with:
+        image: "ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_tag.outputs.tag }}"
+        output-format: "table"
+        output-file: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.txt"
+        fail-build: "false"
+    - name: Upload Grype (Text report)
+      if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-txt
+        path: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.txt
+        retention-days: 1
 
     - name: Test var
       shell: bash
