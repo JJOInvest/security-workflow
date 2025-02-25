@@ -60,17 +60,9 @@ runs:
     - name: Set env for Trivy (dev/test/prod)
       shell: bash
       run: |
-        echo "GITHUB_WORKFLOW: $GITHUB_WORKFLOW"
-        echo "TRIVY_EXIT_CODE: $TRIVY_EXIT_CODE"
-
-        # Initialize exit code
         exit_code_env_trivy=0
 
-        # Determine environment
         env=$(echo $GITHUB_WORKFLOW | grep -o "prod")
-        echo "env: $env"
-
-        # Set exit code based on environment
         if [[ "$env" == "prod" ]]; then
           exit_code_env_trivy=1
           echo "Running image scan in $env"
@@ -81,9 +73,7 @@ runs:
           echo "You can find reports in artifacts"
         fi
 
-        # Write exit code to file
-        echo "exit_code_env_trivy=$exit_code_env_trivy" >> $TRIVY_EXIT_CODE
-        echo "Exit code written to $TRIVY_EXIT_CODE"
+        echo "exit_code_env_trivy=$exit_code_env_trivy" >> $GITHUB_OUTPUT
       id: exit_code_env_trivy
     - name: Set env for Grype (dev/test/prod)
       shell: bash
@@ -101,7 +91,7 @@ runs:
           echo "You can find reports in artifacts"
         fi
 
-        echo "exit_code_env_grype=$exit_code_env_grype" >> $TRIVY_EXIT_CODE
+        echo "exit_code_env_grype=$exit_code_env_grype" >> $GITHUB_OUTPUT
       id: exit_code_env_grype
 
     - name: Run Trivy (JSON report)
