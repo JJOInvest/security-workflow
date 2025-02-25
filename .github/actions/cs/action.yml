@@ -56,10 +56,16 @@ runs:
       shell: bash
       run: echo "tag=${GITHUB_HEAD_REF:-${{ inputs.GITHUB_REF }}}" >> $GITHUB_OUTPUT
       id: extract_tag
-    - name: Set env (dev/test/prod)
-      shell: bash
-      run: | 
-        echo $GITHUB_WORKFLOW
+    # - name: Set env (dev/test/prod)
+    #   shell: bash
+    #   run: | 
+    #     env = echo $GITHUB_WORKFLOW | grep prod
+    #     if [[ "$env" == "prod" ]]; then
+    #       exit_code_env_trivy=1
+    #       exit_code_env_grype=1 
+    #     else
+    #       exit_code_env_trivy=0
+    #       exit_code_env_grype=0
 
     - name: Run Trivy (JSON report)
       if: steps.tool_for_scanning.outputs.scan_tool == 'trivy'
@@ -81,7 +87,7 @@ runs:
       uses: aquasecurity/trivy-action@0.29.0
       with:
         image-ref: "ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_tag.outputs.tag }}"
-        format: "html"
+        format: "template"
         template: "@$HOME/.local/bin/trivy-bin/contrib/html.tpl"
         output: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.html"
         severity: 'CRITICAL,HIGH'
