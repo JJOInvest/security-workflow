@@ -119,13 +119,13 @@ runs:
         output-format: "json"
         output-file: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json"
         fail-build: "false"
-    - name: Upload Grype (JSON report)
-      if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-json
-        path: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json
-        retention-days: 1
+    # - name: Upload Grype (JSON report)
+    #   if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-json
+    #     path: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json
+    #     retention-days: 1
     - name: Run Grype (Text report)
       if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
       uses: anchore/scan-action@v6
@@ -134,13 +134,13 @@ runs:
         output-format: "table"
         output-file: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.txt"
         fail-build: "false"
-    - name: Upload Grype (Text report)
-      if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-txt
-        path: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.txt
-        retention-days: 1
+    # - name: Upload Grype (Text report)
+    #   if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-txt
+    #     path: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.txt
+    #     retention-days: 1
 
     - name: Test var
       shell: bash
