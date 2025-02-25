@@ -17,12 +17,12 @@ runs:
         repos_for_trivy_scan=("JJOInvest/backtest-service-java" \
                               "JJOInvest/activity-service-java" \
                               "JJOInvest/access-token-service"
-                              "JJOInvest/tron-connector" \
-                              "JJOInvest/jjo-invest-backend-v2")
+                              "JJOInvest/tron-connector")
 
         repos_for_grype_scan=("JJOInvest/exchange-connector-service-js" \
                               "JJOInvest/jjo-slack-bot" \
-                              "JJOInvest/coop-landing-v2")
+                              "JJOInvest/coop-landing-v2" \
+                              "JJOInvest/jjo-invest-backend-v2")
 
         scan_tool=""
         found=0
@@ -70,7 +70,7 @@ runs:
 
         exit_code_env_trivy=0
 
-        if [[ "$GITHUB_WORKFLOW" == *"dev"* ]]; then
+        if [[ "$GITHUB_WORKFLOW" == *"prod"* ]]; then
           exit_code_env_trivy=1
           echo "Running image scan in prod"
           echo "If High or Critical vulnerabilities are found, the pipeline will fail"
@@ -158,7 +158,7 @@ runs:
         image: "ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_tag.outputs.tag }}"
         output-format: "table"
         output-file: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.txt"
-        severity-cutoff: critical
+        severity-cutoff: high
         fail-build: ${{ steps.exit_code_env_grype.outputs.exit_code_env_grype }}
     - name: Upload Grype (Text report)
       if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
