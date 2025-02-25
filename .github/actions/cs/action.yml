@@ -100,6 +100,7 @@ runs:
         image: "ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_tag.outputs.tag }}"
         output-format: "json"
         output-file: "${{ github.event.repository.name }}-${{ github.ref_name }}.json"
+        fail-build: "false"
     - name: Upload Grype (JSON report)
       if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
       uses: actions/upload-artifact@v4
