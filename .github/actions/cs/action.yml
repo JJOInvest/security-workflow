@@ -69,8 +69,7 @@ runs:
         image-ref: "ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_tag.outputs.tag }}"
         format: "json"
         output: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json"
-        # severity: 'CRITICAL,HIGH'
-        exit-code: '1'
+        exit-code: 0
     - name: Upload Trivy (JSON report)
       if: steps.tool_for_scanning.outputs.scan_tool == 'trivy'
       uses: actions/upload-artifact@v4
@@ -86,6 +85,8 @@ runs:
         format: "template"
         template: "@$HOME/.local/bin/trivy-bin/contrib/html.tpl"
         output: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.html"
+        severity: 'CRITICAL,HIGH'
+        exit-code: '1'
         skip-setup-trivy: true
     - name: Upload Trivy (HTML report)
       if: steps.tool_for_scanning.outputs.scan_tool == 'trivy'
