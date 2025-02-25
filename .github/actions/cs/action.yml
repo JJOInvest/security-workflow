@@ -20,12 +20,12 @@ runs:
         repos_for_trivy_scan=("JJOInvest/backtest-service-java" \
                               "JJOInvest/activity-service-java" \
                               "JJOInvest/access-token-service"
-                              "JJOInvest/tron-connector")
+                              "JJOInvest/tron-connector" \
+                              "JJOInvest/jjo-invest-backend-v2")
 
         repos_for_grype_scan=("JJOInvest/exchange-connector-service-js" \
                               "JJOInvest/jjo-slack-bot" \
-                              "JJOInvest/coop-landing-v2" \
-                              "JJOInvest/jjo-invest-backend-v2")
+                              "JJOInvest/coop-landing-v2")
 
         scan_tool=""
         found=0
