@@ -62,18 +62,16 @@ runs:
       run: |
         exit_code_env_trivy=0
 
-        env=$(echo $GITHUB_WORKFLOW | grep -o "prod")
-        if [[ "$env" == "prod" ]]; then
+        if [[ "$GITHUB_WORKFLOW" == *"prod"* ]]; then
           exit_code_env_trivy=1
-          echo "Running image scan in $env"
-          echo "If High or Critical vuln pipeline will be failed"
+          echo "Running image scan in prod"
+          echo "If High or Critical vulnerabilities are found, the pipeline will fail"
         else
-          exit_code_env_trivy=0
-          echo "Running image scan in $env"
+          echo "Running image scan in non-prod environment"
           echo "You can find reports in artifacts"
         fi
 
-        echo "exit_code_env_trivy=$exit_code_env_trivy" >> $GITHUB_OUTPUT
+        echo "exit_code_env_trivy=$exit_code_env_trivy" >> "$GITHUB_ENV"
       id: exit_code_env_trivy
     - name: Set env for Grype (dev/test/prod)
       shell: bash
