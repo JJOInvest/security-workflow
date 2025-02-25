@@ -93,8 +93,21 @@ runs:
         path: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.html
         retention-days: 1
 
-    - name: Test var
+    - name: Run Grype (JSON report)
       if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
+      uses: anchore/scan-action@v6
+      with:
+        image: "ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_tag.outputs.tag }}"
+        output-format: "json"
+        output-file: "${{ github.event.repository.name }}-${{ github.ref_name }}.json"
+    - name: Upload Grype (JSON report)
+      if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-json
+        path: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json
+        retention-days: 1
+
+    - name: Test var
       run: |
-        echo "Hello Grype"
-      shell: bash
+        echo $GITHUB_WORKFLOW
