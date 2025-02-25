@@ -89,7 +89,7 @@ runs:
 
         exit_code_env_grype=""
 
-        if [[ "$GITHUB_WORKFLOW" == *"prod"* ]]; then
+        if [[ "$GITHUB_WORKFLOW" == *"dev"* ]]; then
           exit_code_env_grype="true"
           echo "Running image scan in prod"
           echo "If High or Critical vulnerabilities are found, the pipeline will fail"
