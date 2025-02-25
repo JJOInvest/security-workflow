@@ -69,7 +69,7 @@ runs:
         image-ref: "ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_tag.outputs.tag }}"
         format: "json"
         output: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json"
-        severity: 'CRITICAL,HIGH'
+        # severity: 'CRITICAL,HIGH'
         exit-code: '1'
     - name: Upload Trivy (JSON report)
       if: steps.tool_for_scanning.outputs.scan_tool == 'trivy'
