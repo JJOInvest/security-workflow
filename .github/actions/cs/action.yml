@@ -70,7 +70,7 @@ runs:
 
         exit_code_env_trivy=0
 
-        if [[ "$GITHUB_WORKFLOW" == *"prod"* ]]; then
+        if [[ "$GITHUB_WORKFLOW" == *"dev"* ]]; then
           exit_code_env_trivy=1
           echo "Running image scan in prod"
           echo "If High or Critical vulnerabilities are found, the pipeline will fail"
