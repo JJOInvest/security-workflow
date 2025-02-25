@@ -116,7 +116,7 @@ runs:
         template: "@$HOME/.local/bin/trivy-bin/contrib/html.tpl"
         output: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.html"
         severity: 'CRITICAL,HIGH'
-        exit-code: steps.exit_code_env_trivy.outputs.exit_code_env_trivy
+        exit-code: ${{ steps.exit_code_env_trivy.outputs.exit_code_env_trivy }}
         skip-setup-trivy: true
     - name: Upload Trivy (HTML report)
       if: steps.tool_for_scanning.outputs.scan_tool == 'trivy'
