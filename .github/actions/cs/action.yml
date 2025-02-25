@@ -88,7 +88,7 @@ runs:
         image-ref: "ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_tag.outputs.tag }}"
         format: "table"
         # template: "@$HOME/.local/bin/trivy-bin/contrib/html.tpl"
-        output: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.html"
+        # output: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.html"
         severity: 'CRITICAL,HIGH'
         exit-code: '1'
         skip-setup-trivy: true
