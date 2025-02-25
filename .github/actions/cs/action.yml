@@ -64,6 +64,7 @@ runs:
     - name: Set env (dev/test/prod)
       shell: bash
       run: | 
+        echo $GITHUB_WORKFLOW
 
     - name: Run Trivy (JSON report)
       if: steps.tool_for_scanning.outputs.scan_tool == 'trivy'
@@ -129,8 +130,3 @@ runs:
         name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-txt
         path: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.txt
         retention-days: 1
-
-    - name: Test var
-      shell: bash
-      run: |
-        echo $GITHUB_WORKFLOW
