@@ -12,6 +12,8 @@ runs:
     - name: Set tool for scanning
       shell: bash
       run: |
+        # Set tool for scanning
+
         repos_for_trivy_scan=("JJOInvest/backtest-service-java" \
                               "JJOInvest/activity-service-java" \
                               "JJOInvest/access-token-service"
@@ -54,12 +56,18 @@ runs:
       id: tool_for_scanning
     - name: Extract tag name
       shell: bash
-      run: echo "tag=${GITHUB_HEAD_REF:-${{ inputs.GITHUB_REF }}}" >> $GITHUB_OUTPUT
+      run: |
+        # Extract tag name
+
+        echo "tag=${GITHUB_HEAD_REF:-${{ inputs.GITHUB_REF }}}" >> $GITHUB_OUTPUT
       id: extract_tag
 
     - name: Set env for Trivy (dev/test/prod)
+      if: steps.tool_for_scanning.outputs.scan_tool == 'trivy'
       shell: bash
       run: |
+        # Set env for Trivy (dev/test/prod)
+
         exit_code_env_trivy=0
 
         if [[ "$GITHUB_WORKFLOW" == *"prod"* ]]; then
@@ -73,24 +81,26 @@ runs:
 
         echo "exit_code_env_trivy=$exit_code_env_trivy" >> $GITHUB_OUTPUT
       id: exit_code_env_trivy
-    # - name: Set env for Grype (dev/test/prod)
-    #   shell: bash
-    #   run: |
-    #     exit_code_env_grype=0
+    - name: Set env for Grype (dev/test/prod)
+      if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
+      shell: bash
+      run: |
+        # Set env for Grype (dev/test/prod)
 
-    #     env=$(echo $GITHUB_WORKFLOW | grep -o "prod")
-    #     if [[ "$env" == "prod" ]]; then
-    #       exit_code_env_grype=1
-    #       echo "Running image scan in $env"
-    #       echo "If High or Critical vuln pipeline will be failed"
-    #     else
-    #       exit_code_env_grype=0
-    #       echo "Running image scan in $env"
-    #       echo "You can find reports in artifacts"
-    #     fi
+        exit_code_env_grype=""
 
-    #     echo "exit_code_env_grype=$exit_code_env_grype" >> $GITHUB_OUTPUT
-    #   id: exit_code_env_grype
+        if [[ "$GITHUB_WORKFLOW" == *"prod"* ]]; then
+          exit_code_env_grype="true"
+          echo "Running image scan in prod"
+          echo "If High or Critical vulnerabilities are found, the pipeline will fail"
+        else
+          exit_code_env_grype="false"
+          echo "Running image scan in non-prod environment"
+          echo "You can find reports in artifacts"
+        fi
+
+        echo "exit_code_env_grype=$exit_code_env_grype" >> $GITHUB_OUTPUT
+      id: exit_code_env_grype
 
     - name: Run Trivy (JSON report)
       if: steps.tool_for_scanning.outputs.scan_tool == 'trivy'
@@ -148,7 +158,8 @@ runs:
         image: "ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_tag.outputs.tag }}"
         output-format: "table"
         output-file: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.txt"
-        fail-build: "false"
+        severity-cutoff: critical
+        fail-build: ${{ steps.exit_code_env_grype.outputs.exit_code_env_grype }}
     - name: Upload Grype (Text report)
       if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
       uses: actions/upload-artifact@v4
