@@ -106,8 +106,10 @@ runs:
           ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_tag.outputs.tag }}
         
         ${{steps.grype.outputs.cmd}} -o table \
-          --file ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json \
+          --file ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.txt \
           ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_tag.outputs.tag }}
+
+        cat ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.txt
 
     # - name: Run Grype (JSON report)
     #   if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
