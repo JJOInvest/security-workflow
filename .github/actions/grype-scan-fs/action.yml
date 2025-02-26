@@ -1,0 +1,39 @@
+runs:
+  using: 'composite'
+  steps:
+    #Scan repo with grype and generate JSON report
+    - name: Run Grype (JSON report)
+      uses: anchore/scan-action@v6
+      with:
+        path: "."
+        fail-build: "false"
+        severity-cutoff: "medium"
+        by-cve: "true"
+        output-format: "json"
+        output-file: "${{ github.event.repository.name }}-${{ github.ref_name }}.json"
+    #Upload grype JSON report to workflow artifacts
+    - name: Upload Grype (JSON report)
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ github.event.repository.name }}-${{ github.ref_name }}-json
+        path: ${{ github.event.repository.name }}-${{ github.ref_name }}.json
+        #retention-days: 1
+
+    #Scan repo with grype and generate text report
+    - name: Run Grype (Text report)
+      uses: anchore/scan-action@v6
+      with:
+        path: "."
+        fail-build: "false"
+        severity-cutoff: "medium"
+        by-cve: "true"
+        output-format: "table"
+        output-file: "${{ github.event.repository.name }}-${{ github.ref_name }}.txt"
+    
+    #Upload grype text report to workflow artifacts
+    - name: Upload Grype (Text report)
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ github.event.repository.name }}-${{ github.ref_name }}-txt
+        path: ${{ github.event.repository.name }}-${{ github.ref_name }}.txt
+        #retention-days: 1
