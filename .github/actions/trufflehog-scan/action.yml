@@ -20,7 +20,7 @@ runs:
       with:
         extra_args: |
           ${{ inputs.FAIL_CONDITION }}
-          --JSON
+          --json
       id: scan_json
 
     #Scan commit for leaked secrets (text)
