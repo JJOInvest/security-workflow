@@ -33,6 +33,7 @@ runs:
 
     #Save outputs to files
     - name: Save outputs to file
+      shell: bash
       run: |
         echo '${{ steps.scan_json.outputs.result }}' > ${{ github.event.repository.name }}-${{ github.ref_name }}.json
         echo '${{ steps.scan_txt.outputs.result }}' > ${{ github.event.repository.name }}-${{ github.ref_name }}.txt
