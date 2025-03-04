@@ -1,8 +1,8 @@
-inputs:
-  FAIL_CONDITION:
-    required: false
-    type: string
-    default: ''
+#inputs:
+#  FAIL_CONDITION:
+#    required: false
+#    type: string
+#    default: ''
 
 runs:
   using: 'composite'
@@ -19,7 +19,6 @@ runs:
       uses: trufflesecurity/trufflehog@main
       with:
         extra_args: |
-          ${{ inputs.FAIL_CONDITION }}
           --json
       id: scan_json
       continue-on-error: true
@@ -27,10 +26,9 @@ runs:
     #Scan commit for leaked secrets (text)
     - name: Run trufflehog
       uses: trufflesecurity/trufflehog@main
-      with:
-        extra_args: |
-          ${{ inputs.FAIL_CONDITION }}
-          --no-update
+      #with:
+      #  extra_args: |
+      #    --no-update
       id: scan_txt
       continue-on-error: true
 
@@ -38,8 +36,8 @@ runs:
     - name: Save outputs to file
       shell: bash
       run: |
-        echo '${{ steps.scan_json.outputs.result }}' > ${{ github.event.repository.name }}-${{ github.ref_name }}.json
-        echo '${{ steps.scan_txt.outputs.result }}' > ${{ github.event.repository.name }}-${{ github.ref_name }}.txt
+        echo "${{ steps.scan_json.outputs.result }}" > ${{ github.event.repository.name }}-${{ github.ref_name }}.json
+        echo "${{ steps.scan_txt.outputs.result }}" > ${{ github.event.repository.name }}-${{ github.ref_name }}.txt
     
     #Upload trufflehog JSON report to workflow artifacts
     - name: Upload trufflehog (JSON report)
