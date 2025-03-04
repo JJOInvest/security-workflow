@@ -20,7 +20,7 @@ runs:
       with:
         extra_args: |
           ${{ inputs.FAIL_CONDITION }}
-          --json
+          --json > ${{ github.event.repository.name }}-${{ github.ref_name }}.json
       id: scan_json
 
     #Scan commit for leaked secrets (text)
@@ -32,11 +32,11 @@ runs:
       id: scan_txt
 
     #Save outputs to files
-    - name: Save outputs to file
-      shell: bash
-      run: |
-        echo '${{ steps.scan_json.outputs.result }}' > ${{ github.event.repository.name }}-${{ github.ref_name }}.json
-        echo '${{ steps.scan_txt.outputs.result }}' > ${{ github.event.repository.name }}-${{ github.ref_name }}.txt
+    #- name: Save outputs to file
+    #  shell: bash
+    #  run: |
+    #    echo '${{ steps.scan_json.outputs.result }}' > ${{ github.event.repository.name }}-${{ github.ref_name }}.json
+    #    echo '${{ steps.scan_txt.outputs.result }}' > ${{ github.event.repository.name }}-${{ github.ref_name }}.txt
     
     #Upload trufflehog JSON report to workflow artifacts
     - name: Upload trufflehog (JSON report)
