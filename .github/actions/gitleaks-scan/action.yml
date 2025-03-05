@@ -25,7 +25,7 @@ runs:
           exit 0
         elif [ $SECRET_EXIT_CODE = "1" ]
         then
-          echo "Secrets or error encountered"
+          echo "########Secrets or error encountered########"
           exit 1
         else
           echo "Error has been occured"
