@@ -3,17 +3,25 @@ runs:
   using: 'composite'
   steps:
     
-    #Checkout code
+    #Checkout current commit
     - name: Checkout
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
     
-    #Scan repo
+    #Scan current commit
     - name: Run gitleaks
-      uses: gitleaks/gitleaks-action@v2
-      env:
-        GITLEAKS_ENABLE_COMMENTS: false
-        GITLEAKS_ENABLE_UPLOAD_ARTIFACT: true
-      
-    
+      shell: bash
+      run: |
+        docker run --rm -v .:/path -w /path \
+        ghcr.io/gitleaks/gitleaks:latest \
+        git --log-opts "-1" \
+        -f json \
+        -r gitleaks-${{ github.event.repository.name }}-${{ github.ref_name }}.json
+
+    - name: Upload gitleaks report to artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: gitleaks-${{ github.event.repository.name }}-${{ github.ref_name }}-json
+        path: gitleaks-${{ github.event.repository.name }}-${{ github.ref_name }}.json
+        #retention-days: 1
