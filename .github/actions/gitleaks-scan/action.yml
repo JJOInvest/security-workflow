@@ -6,8 +6,6 @@ runs:
     #Checkout current commit
     - name: Checkout
       uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
     
     #Scan current commit
     - name: Run gitleaks
