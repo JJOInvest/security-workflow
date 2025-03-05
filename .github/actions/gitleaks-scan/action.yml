@@ -10,15 +10,17 @@ runs:
     #Scan current commit
     - name: Run gitleaks
       shell: bash
+      id: gitleaks_scan
       run: |
         docker run --rm -v .:/path -w /path \
         ghcr.io/gitleaks/gitleaks:latest \
         git --log-opts "-1" \
         -f json \
-        -r gitleaks-${{ github.event.repository.name }}-${{ github.ref_name }}.json
+        -r gitleaks-${{ github.event.repository.name }}-${{ github.ref_name }}.json 
 
     - name: Upload gitleaks report to artifacts
       uses: actions/upload-artifact@v4
+      if: always()
       with:
         name: gitleaks-${{ github.event.repository.name }}-${{ github.ref_name }}-json
         path: gitleaks-${{ github.event.repository.name }}-${{ github.ref_name }}.json
