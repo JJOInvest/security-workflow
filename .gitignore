@@ -1,4 +1,5 @@
 **/.DS_Store
-/sca/analyse/
+.github/actions/cs/analyze/*
 scope.md
-/sca/flow.md
+flow.md
+changelog.md
