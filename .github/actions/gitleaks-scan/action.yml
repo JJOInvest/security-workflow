@@ -1,0 +1,41 @@
+
+runs:
+  using: 'composite'
+  steps:
+    
+    #Checkout current commit
+    - name: Checkout
+      uses: actions/checkout@v4
+    
+    #Scan current commit with gitleaks, generate JSON report and catch exit code
+    - name: Run gitleaks
+      shell: bash
+      id: gitleaks_scan
+      run: |
+        docker run --rm -v .:/path -w /path \
+        ghcr.io/gitleaks/gitleaks:latest \
+        git --log-opts "-1" \
+        -f json \
+        -r gitleaks-${{ github.event.repository.name }}-${{ github.ref_name }}.json \
+        || SECRET_EXIT_CODE=$?
+
+        if [ -z $SECRET_EXIT_CODE ]
+          then
+            echo "Secrets has not been found"
+          exit 0
+        elif [ $SECRET_EXIT_CODE = "1" ]
+        then
+          echo "########Secrets or error encountered########"
+          exit 1
+        else
+          echo "Error has been occured"
+        fi
+
+
+    - name: Upload gitleaks report to artifacts
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: gitleaks-${{ github.event.repository.name }}-${{ github.ref_name }}-json
+        path: gitleaks-${{ github.event.repository.name }}-${{ github.ref_name }}.json
+        #retention-days: 1
