@@ -7,7 +7,7 @@ runs:
     - name: Checkout
       uses: actions/checkout@v4
     
-    #Scan current commit
+    #Scan current commit with gitleaks, generate JSON report and catch exit code
     - name: Run gitleaks
       shell: bash
       id: gitleaks_scan
