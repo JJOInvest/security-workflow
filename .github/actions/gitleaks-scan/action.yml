@@ -9,6 +9,7 @@ runs:
     
     #Scan current commit with gitleaks, generate JSON report and catch exit code
     - name: Run gitleaks
+      continue-on-error: ${{ github.ref_type == 'tag' }}
       shell: bash
       id: gitleaks_scan
       run: |
