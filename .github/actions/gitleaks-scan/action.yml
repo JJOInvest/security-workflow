@@ -18,7 +18,7 @@ runs:
         ghcr.io/gitleaks/gitleaks:latest \
         git --log-opts "-1" \
         -f json \
-        -r "gitleaks-${{ github.event.repository.name }}-${{ replace(github.ref_name, '/', '-') }}.json" \
+        -r "gitleaks-${{ github.event.repository.name }}-${{ github.ref_name | replace('/', '-') }}.json" \
         || SECRET_EXIT_CODE=$?
 
         if [ -z $SECRET_EXIT_CODE ]
