@@ -7,9 +7,10 @@ runs:
     - name: Checkout
       uses: actions/checkout@v4
     
-    #Scan current commit with gitleaks, generate JSON report and catch exit code
+    #Scan current commit with gitleaks, generate JSON report and catch exit code    
     - name: Run gitleaks
-      continue-on-error: ${{ github.ref_type == 'tag' }}
+      #джоба не падает при старте по событию тега (актуально для продовых воркфлоу в продуктовых репах) и при пуше в main в tf-репах
+      continue-on-error: ${{ github.ref_type == 'tag' || (startsWith(github.repository, 'tf-') && github.ref == 'refs/heads/main') }}
       shell: bash
       id: gitleaks_scan
       run: |
