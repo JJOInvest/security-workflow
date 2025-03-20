@@ -38,6 +38,6 @@ runs:
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: gitleaks-${{ github.event.repository.name }}-${{ github.ref_name }}-json
+        name: gitleaks-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}-json
         path: gitleaks-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}.json
         #retention-days: 1
