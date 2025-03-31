@@ -14,8 +14,8 @@ runs:
         semgrep scan \
         -- json \
         -o "semgrep-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}.json"
-        --config=p/xss \ \
-        --config=p/jwt \ \
+        --config=p/xss \
+        --config=p/jwt \
         --config=p/gitlab \
         --config=p/default \
         --config=p/comment \
