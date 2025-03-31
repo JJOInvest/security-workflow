@@ -1,12 +1,16 @@
 runs:
   using: 'composite'
   steps:      
-    #Scan current commit with gitleaks, generate JSON report and catch exit code    
-    - name: Run Semgrep
-      # Fetch project source with GitHub Actions Checkout. Use either v3 or v4.
+    #Scan current commit with semgrep and generate JSON report  
+    - name: Checkout
       uses: actions/checkout@v4
-      # Run the "semgrep scan" command on the command line of the docker image.
+      
+    - name: Run semgrep
+      shell: bash
+      id: semgrep_scan
       run: |
+        docker run --rm -v .:/src -w /src \
+        semgrep/semgrep \        
         semgrep scan \
         -- json \
         -o "semgrep-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}.json"
