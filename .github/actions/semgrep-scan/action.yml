@@ -5,15 +5,16 @@ runs:
     - name: Checkout
       uses: actions/checkout@v4
       
+
     - name: Run semgrep
       shell: bash
       id: semgrep_scan
       run: |
         docker run --rm -v .:/src -w /src \
-        semgrep/semgrep \        
+        semgrep/semgrep \
         semgrep scan \
-        -- json \
-        -o "semgrep-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}.json"
+        --json \
+        -o "semgrep-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}.json" \
         --config=p/xss \
         --config=p/jwt \
         --config=p/gitlab \
