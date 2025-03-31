@@ -13,7 +13,7 @@ runs:
         docker run --rm -v .:/src -w /src \
         semgrep/semgrep \
         semgrep scan \
-        --debug
+        --verbose \
         --json \
         -o "semgrep-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}.json" \
         --config=p/xss \
