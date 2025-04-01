@@ -1,0 +1,41 @@
+runs:
+  using: 'composite'
+  steps:      
+    #Scan current commit with semgrep and generate JSON report  
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+
+    - name: Run semgrep
+      shell: bash
+      id: semgrep_scan
+      run: |
+        docker run --rm -v .:/src -w /src \
+        semgrep/semgrep \
+        semgrep scan \
+        --json \
+        -o "semgrep-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}.json" \
+        --config=p/xss \
+        --config=p/gitlab \
+        --config=p/default \
+        --config=p/shadow-ai \
+        --config=p/cwe-top-25 \
+        --config=p/trailofbits \
+        --config=p/owasp-top-ten \
+        --config=p/security-audit \
+        --config=p/php \
+        --config=p/phpcs-security-audit \
+        --config=p/golang \
+        --config=p/semgrep-go-correctness \
+        --config=p/expressjs \
+        --config=p/react-best-practices \
+        .
+
+
+    - name: Upload semgrep report to artifacts
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: semgrep-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}-json
+        path: semgrep-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}.json
+        #retention-days: 1
