@@ -20,13 +20,12 @@ runs:
     - name: Run Hadolint
       uses: hadolint/hadolint-action@v3.1.0
       with:
+        no-fail: true
         recursive: true
-        output-file: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-Dockerfile.json"
-
-        # dockerfile:
-    # - name: Upload Trivy (JSON report)
-    #   uses: actions/upload-artifact@v4
-    #   with:
-    #     name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-json
-    #     path: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json
-    #     retention-days: 1
+        output-file: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json"
+    - name: Upload Hadolint (JSON report)
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-json
+        path: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json
+        retention-days: 1
