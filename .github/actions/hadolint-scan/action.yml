@@ -1,0 +1,23 @@
+# inputs:
+#   GITHUB_REF:
+#     type: string
+#     required: true
+#   SERVICE_NAME:
+#     type: string
+#     required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/checkout@v3
+    - name: Run Hadolint
+      uses: hadolint/hadolint-action@v3.1.0
+      with:
+        recursive: true
+        # dockerfile:
+    # - name: Upload Trivy (JSON report)
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-json
+    #     path: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json
+    #     retention-days: 1
