@@ -60,7 +60,7 @@ runs:
     
     - name: import scan results into defectdojo
       id: import-scan-results-into-defectdojo
-      uses: portswigger-cloud/defectdojo-github-action@v1
+      uses: portswigger-cloud/defectdojo-active-findings@v1
       with:
         defectdojo-url: ${{ inputs.defectdojo-url }}
         defectdojo-username: ${{ inputs.defectdojo-username }}
