@@ -2,12 +2,9 @@ inputs:
   defectdojo-url:
     required: true
     description: 'DefectDojo URL'
-  defectdojo-username:
+  defectdojo-token:
     required: true
-    description: 'DefectDojo Username'
-  defectdojo-password:
-    required: true
-    description: 'DefectDojo Password'
+    description: 'DefectDojo API Key'
 
 runs:
   using: 'composite'
@@ -52,24 +49,30 @@ runs:
         path: gitleaks-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}.json
         #retention-days: 1
 
-    - name: Download scan results artifact
-      if: always()
-      id: download-scan-results-artifact
-      uses: actions/download-artifact@v4
+    #- name: Download scan results artifact
+    #  if: always()
+    #  id: download-scan-results-artifact
+    #  uses: actions/download-artifact@v4
+    #  with:
+    #    name: gitleaks-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}-json
+        
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v4
       with:
-        name: gitleaks-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}-json
-    
-    - name: import scan results into defectdojo
-      if: always()
-      id: import-scan-results-into-defectdojo
-      uses: portswigger-cloud/defectdojo-active-findings@v1
-      with:
-        defectdojo-url: ${{ inputs.defectdojo-url }}
-        defectdojo-username: ${{ inputs.defectdojo-username }}
-        defectdojo-password: ${{ inputs.defectdojo-password }}
-        defectdojo-product-type: JJO
-        defectdojo-product: ${{ github.event.repository.name }}
-        defectdojo-environment-type: Production
-        defectdojo-scan-type: Gitleaks JSON Report
-        defectdojo-engagement-name: Secrets Scan
-        scan-results-file-name: gitleaks-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}.json
+        python-version: 3.12
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install dd-import
+    - name: Upload Gitleaks Report to DefectDojo
+      env:
+        DD_URL: ${{ inputs.defectdojo-url }}
+        DD_API_KEY: ${{ inputs.defectdojo-token }}
+        DD_PRODUCT_TYPE_NAME: JJO
+        DD_PRODUCT_NAME: ${{ github.event.repository.name }}
+        DD_ENGAGEMENT_NAME: ${{ github.head_ref || github.ref_name }}
+        DD_TEST_NAME: Gitleaks
+        DD_TEST_TYPE_NAME: Gitleaks Scan
+        DD_FILE_NAME: gitleaks-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}.json
+      run: |
+        dd-reimport-findings
