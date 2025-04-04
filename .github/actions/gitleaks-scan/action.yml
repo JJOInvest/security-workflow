@@ -62,9 +62,9 @@ runs:
       id: import-scan-results-into-defectdojo
       uses: portswigger-cloud/defectdojo-github-action@v1
       with:
-        defectdojo-url: ${{ secrets.DEFECTDOJO_URL }}
-        defectdojo-username: ${{ secrets.DEFECTDOJO_USERNAME }}
-        defectdojo-password: ${{ secrets.DEFECTDOJO_PASSWORD }}
+        defectdojo-url: ${{ inputs.defectdojo-url }}
+        defectdojo-username: ${{ inputs.defectdojo-username }}
+        defectdojo-password: ${{ inputs.defectdojo-password }}
         defectdojo-product-type: JJO
         defectdojo-product: ${{ github.event.repository.name }}
         defectdojo-environment-type: Production
