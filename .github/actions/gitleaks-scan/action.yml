@@ -53,12 +53,14 @@ runs:
         #retention-days: 1
 
     - name: Download scan results artifact
+      if: always()
       id: download-scan-results-artifact
       uses: actions/download-artifact@v4
       with:
         name: gitleaks-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}-json
     
     - name: import scan results into defectdojo
+      if: always()
       id: import-scan-results-into-defectdojo
       uses: portswigger-cloud/defectdojo-active-findings@v1
       with:
