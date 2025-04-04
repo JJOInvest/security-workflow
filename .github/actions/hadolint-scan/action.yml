@@ -1,19 +1,28 @@
-# inputs:
-#   GITHUB_REF:
-#     type: string
-#     required: true
-#   SERVICE_NAME:
-#     type: string
-#     required: true
+inputs:
+  GITHUB_REF:
+    type: string
+    required: true
+  SERVICE_NAME:
+    type: string
+    required: true
 
 runs:
   using: 'composite'
   steps:
+    - name: Extract tag name
+      shell: bash
+      run: |
+        # Extract tag name
+
+        echo "tag=${GITHUB_HEAD_REF:-${{ inputs.GITHUB_REF }}}" >> $GITHUB_OUTPUT
+      id: extract_tag
     - uses: actions/checkout@v3
     - name: Run Hadolint
       uses: hadolint/hadolint-action@v3.1.0
       with:
         recursive: true
+        output-file: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-Dockerfile.json"
+
         # dockerfile:
     # - name: Upload Trivy (JSON report)
     #   uses: actions/upload-artifact@v4
