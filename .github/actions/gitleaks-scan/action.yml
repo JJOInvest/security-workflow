@@ -49,12 +49,10 @@ runs:
         path: gitleaks-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}.json
         #retention-days: 1
 
-    #- name: Download scan results artifact
-    #  if: always()
-    #  id: download-scan-results-artifact
-    #  uses: actions/download-artifact@v4
-    #  with:
-    #    name: gitleaks-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}-json
+    - name: Download scan results artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: gitleaks-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}-json
         
     - name: Set up Python 3.12
       id: setup_python
@@ -79,4 +77,5 @@ runs:
         DD_TEST_TYPE_NAME: Gitleaks Scan
         DD_FILE_NAME: gitleaks-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}.json
       run: |
+        ls -la $DD_FILE_NAME
         dd-reimport-findings
