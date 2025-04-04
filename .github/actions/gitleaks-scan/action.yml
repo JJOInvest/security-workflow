@@ -1,3 +1,13 @@
+inputs:
+  defectdojo-url:
+    required: true
+    description: 'DefectDojo URL'
+  defectdojo-username:
+    required: true
+    description: 'DefectDojo Username'
+  defectdojo-password:
+    required: true
+    description: 'DefectDojo Password'
 
 runs:
   using: 'composite'
