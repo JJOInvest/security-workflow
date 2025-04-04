@@ -41,3 +41,23 @@ runs:
         name: gitleaks-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}-json
         path: gitleaks-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}.json
         #retention-days: 1
+
+    - name: Download scan results artifact
+      id: download-scan-results-artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: gitleaks-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}-json
+    
+    - name: import scan results into defectdojo
+      id: import-scan-results-into-defectdojo
+      uses: portswigger-cloud/defectdojo-github-action@v1
+      with:
+        defectdojo-url: ${{ secrets.DEFECTDOJO_URL }}
+        defectdojo-username: ${{ secrets.DEFECTDOJO_USERNAME }}
+        defectdojo-password: ${{ secrets.DEFECTDOJO_PASSWORD }}
+        defectdojo-product-type: JJO
+        defectdojo-product: ${{ github.event.repository.name }}
+        defectdojo-environment-type: Production
+        defectdojo-scan-type: Gitleaks JSON Report
+        defectdojo-engagement-name: Secrets Scan
+        scan-results-file-name: gitleaks-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}.json
