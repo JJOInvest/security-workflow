@@ -23,12 +23,12 @@ runs:
         no-fail: true
         recursive: true
         format: json
-        output-file: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json"
+        output-file: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-hadolint.json"
     - name: Upload Hadolint (JSON report)
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-json
-        path: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json
+        name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-hadolint-json
+        path: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-hadolint.json
         retention-days: 1
     - name: Run Hadolint (Text report)
       uses: hadolint/hadolint-action@v3.1.0
@@ -36,10 +36,10 @@ runs:
         no-fail: true
         recursive: true
         format: tty
-        output-file: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.txt"
+        output-file: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-hadolint.txt"
     - name: Upload Hadolint (Text report)
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-txt
-        path: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.txt
+        name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-hadolint-txt
+        path: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-hadolint.txt
         retention-days: 1
