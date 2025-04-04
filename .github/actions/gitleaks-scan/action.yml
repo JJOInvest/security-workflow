@@ -39,21 +39,7 @@ runs:
         else
           echo "Error has been occured"
         fi
-
-
-    - name: Upload gitleaks report to artifacts
-      uses: actions/upload-artifact@v4
-      #if: always()
-      with:
-        name: gitleaks-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}-json
-        path: gitleaks-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}.json
-        #retention-days: 1
-
-    - name: Download scan results artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: gitleaks-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}-json
-        
+      
     - name: Set up Python 3.12
       id: setup_python
       uses: actions/setup-python@v4
@@ -79,3 +65,16 @@ runs:
       run: |
         ls -la $DD_FILE_NAME
         dd-reimport-findings
+
+    - name: Upload gitleaks report to artifacts
+      uses: actions/upload-artifact@v4
+      #if: always()
+      with:
+        name: gitleaks-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}-json
+        path: gitleaks-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}.json
+        #retention-days: 1
+
+    #- name: Download scan results artifact
+    #  uses: actions/download-artifact@v4
+    #  with:
+    #    name: gitleaks-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}-json
