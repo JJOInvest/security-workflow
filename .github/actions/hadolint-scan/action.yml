@@ -43,3 +43,9 @@ runs:
         name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-hadolint-txt
         path: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-hadolint.txt
         retention-days: 1 
+
+    - name: test
+      shell: bash
+      run: |
+        echo $INPUT_DOCKERFILE
+      id: extract_tag
