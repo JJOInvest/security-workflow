@@ -71,10 +71,10 @@ runs:
         DD_TEST_NAME: Gitleaks
         DD_TEST_TYPE_NAME: Gitleaks Scan
         DD_FILE_NAME: gitleaks-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}.json
-        DD_AWS_ACCESS_KEY_ID: AWS_ACCESS_KEY_ID
-        DD_AWS_ACCESS_KEY_ID_VALUE: ${{ inputs.aws-key }}
-        DD_AWS_SECRET_ACCESS_KEY: AWS_SECRET_ACCESS_KEY
-        DD_AWS_SECRET_ACCESS_KEY_VALUE: ${{ inputs.aws-secret-key }}
+        DD_EXTRA_HEADER_1: AWS_ACCESS_KEY_ID
+        DD_EXTRA_HEADER_1_VALUE: ${{ inputs.aws-key }}
+        DD_EXTRA_HEADER_2: AWS_SECRET_ACCESS_KEY
+        DD_EXTRA_HEADER_2_VALUE: ${{ inputs.aws-secret-key }}
       run: |
         ls -la $DD_FILE_NAME
         docker run --rm \
@@ -86,10 +86,10 @@ runs:
         -e DD_TEST_NAME \
         -e DD_TEST_TYPE_NAME \
         -e DD_FILE_NAME \
-        -e DD_AWS_ACCESS_KEY_ID \
-        -e DD_AWS_ACCESS_KEY_ID_VALUE \
-        -e DD_AWS_SECRET_ACCESS_KEY \
-        -e DD_AWS_SECRET_ACCESS_KEY_VALUE \
+        -e DD_EXTRA_HEADER_1 \
+        -e DD_EXTRA_HEADER_1_VALUE \
+        -e DD_EXTRA_HEADER_2 \
+        -e DD_EXTRA_HEADER_2_VALUE \
         -v $(pwd):/usr/local/dd-import/results \
         maibornwolff/dd-import:latest dd-reimport-findings.sh
 
