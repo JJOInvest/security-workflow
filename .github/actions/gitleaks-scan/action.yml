@@ -76,22 +76,25 @@ runs:
         DD_EXTRA_HEADER_2: AWS_SECRET_ACCESS_KEY
         DD_EXTRA_HEADER_2_VALUE: ${{ inputs.aws-secret-key }}
       run: |
-        ls -la $DD_FILE_NAME
-        docker run --rm \
-        -e DD_URL \
-        -e DD_API_KEY \
-        -e DD_PRODUCT_TYPE_NAME \
-        -e DD_PRODUCT_NAME \
-        -e DD_ENGAGEMENT_NAME \
-        -e DD_TEST_NAME \
-        -e DD_TEST_TYPE_NAME \
-        -e DD_FILE_NAME \
-        -e DD_EXTRA_HEADER_1 \
-        -e DD_EXTRA_HEADER_1_VALUE \
-        -e DD_EXTRA_HEADER_2 \
-        -e DD_EXTRA_HEADER_2_VALUE \
-        -v $(pwd):/usr/local/dd-import/results \
-        maibornwolff/dd-import:latest dd-reimport-findings.sh
+        curl -H "CF-Access-Client-ID: $DD_EXTRA_HEADER_1_VALUE" \
+        -H "CF-Access-Client-Secret: $DD_EXTRA_HEADER_2_VALUE" \
+        -H "Authorization: Token $DD_API_KEY" \
+        $DD_URL/api/v2/products/
+      #  docker run --rm \
+      #  -e DD_URL \
+      #  -e DD_API_KEY \
+      #  -e DD_PRODUCT_TYPE_NAME \
+      #  -e DD_PRODUCT_NAME \
+      #  -e DD_ENGAGEMENT_NAME \
+      #  -e DD_TEST_NAME \
+      #  -e DD_TEST_TYPE_NAME \
+      #  -e DD_FILE_NAME \
+      #  -e DD_EXTRA_HEADER_1 \
+      #  -e DD_EXTRA_HEADER_1_VALUE \
+      #  -e DD_EXTRA_HEADER_2 \
+      #  -e DD_EXTRA_HEADER_2_VALUE \
+      #  -v $(pwd):/usr/local/dd-import/results \
+      #  maibornwolff/dd-import:latest dd-reimport-findings.sh
 
     - name: Upload gitleaks report to artifacts
       uses: actions/upload-artifact@v4
