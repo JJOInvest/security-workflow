@@ -56,26 +56,26 @@ runs:
     #    pip install setuptools dd-import
     - name: Upload Gitleaks Report to DefectDojo
       shell: bash
-      #env:
-      #  DD_URL: ${{ inputs.defectdojo-url }}
-      #  DD_API_KEY: ${{ inputs.defectdojo-token }}
-      #  DD_PRODUCT_TYPE_NAME: JJO
-      #  DD_PRODUCT_NAME: ${{ github.event.repository.name }}
-      #  DD_ENGAGEMENT_NAME: ${{ github.head_ref || github.ref_name }}
-      #  DD_TEST_NAME: Gitleaks
-      #  DD_TEST_TYPE_NAME: Gitleaks Scan
-      #  DD_FILE_NAME: gitleaks-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}.json
+      env:
+        DD_URL: ${{ inputs.defectdojo-url }}
+        DD_API_KEY: ${{ inputs.defectdojo-token }}
+        DD_PRODUCT_TYPE_NAME: JJO
+        DD_PRODUCT_NAME: ${{ github.event.repository.name }}
+        DD_ENGAGEMENT_NAME: ${{ github.head_ref || github.ref_name }}
+        DD_TEST_NAME: Gitleaks
+        DD_TEST_TYPE_NAME: Gitleaks Scan
+        DD_FILE_NAME: gitleaks-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}.json
       run: |
         ls -la $DD_FILE_NAME
         docker run --rm \
-        -e DD_URL: ${{ inputs.defectdojo-url }} \
-        -e DD_API_KEY: ${{ inputs.defectdojo-token }} \
-        -e DD_PRODUCT_TYPE_NAME: JJO \
-        -e DD_PRODUCT_NAME: ${{ github.event.repository.name }} \
-        -e DD_ENGAGEMENT_NAME: ${{ github.head_ref || github.ref_name }} \
-        -e DD_TEST_NAME: Gitleaks \
-        -e DD_TEST_TYPE_NAME: Gitleaks Scan \
-        -e DD_FILE_NAME: gitleaks-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}.json \
+        -e DD_URL \
+        -e DD_API_KEY \
+        -e DD_PRODUCT_TYPE_NAME \
+        -e DD_PRODUCT_NAME \
+        -e DD_ENGAGEMENT_NAME \
+        -e DD_TEST_NAME \
+        -e DD_TEST_TYPE_NAME \
+        -e DD_FILE_NAME \
         -v $(pwd):/usr/local/dd-import/results \
         maibornwolff/dd-import:latest dd-reimport-findings.sh
 
