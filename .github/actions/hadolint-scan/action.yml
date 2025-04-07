@@ -47,4 +47,5 @@ runs:
     - name: test
       shell: bash
       run: |
+        echo "hahaha"
         echo $INPUT_DOCKERFILE
