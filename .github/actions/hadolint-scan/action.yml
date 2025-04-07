@@ -9,13 +9,16 @@
 runs:
   using: 'composite'
   steps:
+    - uses: actions/checkout@v4.1.7
+      with:
+        fetch-depth: 0
     - name: Find all Dockerfiles recursively
       shell: bash
       run: |
         echo "hahaha"
         echo $GITHUB_WORKSPACE
         pwd
-        find . -type f \( -iname "dockerfile*" -o -iname "*dockerfile*" \) -not -path "*/.git/*" | sort
+        find $GITHUB_WORKSPACE -type f \( -iname "dockerfile*" -o -iname "*dockerfile*" \) -not -path "*/.git/*" | sort
       #   dockerfiles=($(find . -type f -name "*Dockerfile*" -o -name "*dockerfile*"))
       #   echo "dockerfiles=${dockerfiles[@]}" >> $GITHUB_OUTPUT
       #   echo "Found Dockerfiles:"
