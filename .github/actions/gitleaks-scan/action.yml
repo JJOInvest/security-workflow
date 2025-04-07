@@ -67,7 +67,9 @@ runs:
         DD_FILE_NAME: gitleaks-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}.json
       run: |
         ls -la $DD_FILE_NAME
-        dd-reimport-findings
+        docker run --rm \
+        -v $(pwd):/usr/local/dd-import/results \
+        maibornwolff/dd-import:latest dd-reimport-findings.sh
 
     - name: Upload gitleaks report to artifacts
       uses: actions/upload-artifact@v4
