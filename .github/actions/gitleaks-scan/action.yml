@@ -21,6 +21,7 @@ runs:
       shell: bash
       id: gitleaks_scan
       run: |
+        whoami
         docker run --rm -v .:/path -w /path \
         ghcr.io/gitleaks/gitleaks:latest \
         git --log-opts "-1" \
