@@ -65,6 +65,10 @@ runs:
         DD_TEST_NAME: Gitleaks
         DD_TEST_TYPE_NAME: Gitleaks Scan
         DD_FILE_NAME: gitleaks-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}.json
+        DD_AWS_ACCESS_KEY_ID: AWS_ACCESS_KEY_ID
+        DD_AWS_ACCESS_KEY_ID_VALUE: ${{ secrets.AWS_TEST_ACCESS_KEY }}
+        DD_AWS_SECRET_ACCESS_KEY: AWS_SECRET_ACCESS_KEY
+        DD_AWS_SECRET_ACCESS_KEY_VALUE: ${{ secrets.AWS_TEST_SECRET_ACCESS_KEY }}
       run: |
         ls -la $DD_FILE_NAME
         docker run --rm \
@@ -76,6 +80,10 @@ runs:
         -e DD_TEST_NAME \
         -e DD_TEST_TYPE_NAME \
         -e DD_FILE_NAME \
+        -e DD_AWS_ACCESS_KEY_ID \
+        -e DD_AWS_ACCESS_KEY_ID_VALUE \
+        -e DD_AWS_SECRET_ACCESS_KEY \
+        -e DD_AWS_SECRET_ACCESS_KEY_VALUE \
         -v $(pwd):/usr/local/dd-import/results \
         maibornwolff/dd-import:latest dd-reimport-findings.sh
 
