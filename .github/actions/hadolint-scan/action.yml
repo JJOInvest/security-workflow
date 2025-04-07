@@ -18,7 +18,11 @@ runs:
         echo "hahaha"
         find $GITHUB_WORKSPACE -type f \( -iname "dockerfile*" -o -iname "*dockerfile*" \) -not -path "*/.git/*" | sort
         echo "hahaha 2"
-        find . -type f \( -iname "dockerfile*" -o -iname "*dockerfile*" \) -not -path "*/.git/*" | sort
+        find $GITHUB_WORKSPACE -type f \( -iname "dockerfile*" -o -iname "*dockerfile*" \) -not -path "*/.git/*" | sort | while read -r fullpath; do
+          trimmed_path="${fullpath#/home/runner/work/}"
+          modified_path=$(echo "$trimmed_path" | tr '/' '-')
+          echo "$modified_path"
+        done > dockerfiles_modified.txt
       #   dockerfiles=($(find . -type f -name "*Dockerfile*" -o -name "*dockerfile*"))
       #   echo "dockerfiles=${dockerfiles[@]}" >> $GITHUB_OUTPUT
       #   echo "Found Dockerfiles:"
