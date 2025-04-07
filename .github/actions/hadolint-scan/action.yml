@@ -12,8 +12,8 @@ runs:
     - name: Find all Dockerfiles recursively
       shell: bash
       run: |
-        find . -type f -iname '*dockerfile*' | sed 's|^\./||' > dockerfile_list.txt
-        cat dockerfile_list.txt
+        pwd
+        find . -type f \( -iname "dockerfile*" -o -iname "*dockerfile*" \) -not -path "*/.git/*" | sort
       #   dockerfiles=($(find . -type f -name "*Dockerfile*" -o -name "*dockerfile*"))
       #   echo "dockerfiles=${dockerfiles[@]}" >> $GITHUB_OUTPUT
       #   echo "Found Dockerfiles:"
