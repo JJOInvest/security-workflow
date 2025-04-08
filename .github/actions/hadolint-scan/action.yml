@@ -51,8 +51,7 @@ runs:
           report_name="${flat_name}-hadolint.txt"
 
           docker run --rm -i --entrypoint /bin/hadolint \
-            hadolint/hadolint --no-fail -f tty - < "$file" | \
-            jq --arg file "$trimmed_path" '.[].file = $file' > "$report_name"          
+            hadolint/hadolint --no-fail -f tty - < "$file" > "$report_name"          
 
           echo "Saved report to $report_name"
           cat $report_name
