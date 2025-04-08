@@ -16,7 +16,7 @@ runs:
         for file in "${files[@]}"; do
           trimmed_path="${file#/home/runner/work/}"
           
-          echo "Scanning: $file"
+          echo "Scanning: $trimmed_path"
           
           flat_name=$(echo "$trimmed_path" | tr '/' '-' | sed 's/^-//')
           report_name="${flat_name}-hadolint.json"
@@ -45,17 +45,18 @@ runs:
         for file in "${files[@]}"; do
           trimmed_path="${file#/home/runner/work/}"
           
-          echo "Scanning: $file"
+          echo "Scanning: $trimmed_path"
           
           flat_name=$(echo "$trimmed_path" | tr '/' '-' | sed 's/^-//')
           report_name="${flat_name}-hadolint.txt"        
 
           docker run --rm -i --entrypoint /bin/hadolint hadolint/hadolint \
-            --no-fail -f tty - < Dockerfile 2>&1 | \
+            --no-fail -f tty - < "$file" 2>&1 | \
             sed "s|^-:|$trimmed_path:|g"
 
           echo "Saved report to $report_name"
           cat $report_name
+          echo "================================"
         done
     - name: Upload Hadolint (Text report)
       uses: actions/upload-artifact@v4
