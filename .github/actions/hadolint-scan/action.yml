@@ -30,11 +30,11 @@ runs:
           
           flat_name=$(echo "$trimmed_path" | tr '/' '-' | sed 's/^-//')
           report_name="${flat_name}-hadolint.json"
-          
+
           docker run --rm -i --entrypoint /bin/hadolint \
             hadolint/hadolint --no-fail -f json - < "$file" | \
-            jq '.[].file |= "$trimmed_path"' > "$report_name"
-          
+            jq --arg file "$trimmed_path" '.[].file = $file' > "$report_name"          
+
           echo "Saved report to $report_name"
           cat $report_name
         done
