@@ -1,19 +1,9 @@
-          # docker run --rm -i -v "$(pwd)":/mnt hadolint/hadolint < "$file" \
-          #   | jq -s '.' > "$report_name"
-
 runs:
   using: 'composite'
   steps:
     - name: Checkout
       uses: actions/checkout@v4
-
-    - name: Find and scan Dockerfiles with Hadolint
-      shell: bash
-      run: |
-        cat $GITHUB_WORKSPACE/.github/workflows/Dockerfile
-        docker run --rm -i --entrypoint /bin/hadolint hadolint/hadolint --no-fail -f json - < $GITHUB_WORKSPACE/.github/workflows/Dockerfile
-
-    - name: Find and scan Dockerfiles with Hadolint 2
+    - name: Run Hadolint (JSON report)
       shell: bash
       run: |
         echo "Finding Dockerfiles..."
@@ -36,67 +26,39 @@ runs:
             jq --arg file "$trimmed_path" '.[].file = $file' > "$report_name"          
 
           echo "Saved report to $report_name"
-          cat $report_name
         done
-
-    - name: Upload all Hadolint reports
+    - name: Upload Hadolint (JSON report)
       uses: actions/upload-artifact@v4
       with:
         name: hadolint-reports
         path: '*-hadolint.json'
+    - name: Run Hadolint (Text report)
+      shell: bash
+      run: |
+        echo "Finding Dockerfiles..."
+        mapfile -t files < <(find $GITHUB_WORKSPACE -type f \( -iname "dockerfile*" -o -iname "*dockerfile*" \) -not -path "*/.git/*" | sort)
+        if [ ${#files[@]} -eq 0 ]; then
+          echo "No Dockerfiles found. Exiting."
+          exit 0
+        fi
 
+        for file in "${files[@]}"; do
+          trimmed_path="${file#/home/runner/work/}"
+          
+          echo "Scanning: $file"
+          
+          flat_name=$(echo "$trimmed_path" | tr '/' '-' | sed 's/^-//')
+          report_name="${flat_name}-hadolint.txt"
 
+          docker run --rm -i --entrypoint /bin/hadolint \
+            hadolint/hadolint --no-fail -f tty - < "$file" | \
+            jq --arg file "$trimmed_path" '.[].file = $file' > "$report_name"          
 
-
-
-
-
-# runs:
-#   using: 'composite'
-#   steps:
-#     - uses: actions/checkout@v4.1.7
-#       with:
-#         fetch-depth: 0
-#     - name: Find all Dockerfiles recursively
-#       shell: bash
-#       run: |
-#         find $GITHUB_WORKSPACE -type f \( -iname "dockerfile*" -o -iname "*dockerfile*" \) -not -path "*/.git/*" | sort
-
-#         find "$GITHUB_WORKSPACE" -type f \( -iname "dockerfile*" -o -iname "*dockerfile*" \) \
-#             -not -path "*/.git/*" \
-#             | sort \
-#             | while read -r fullpath; do
-#                 trimmed_path="${fullpath#/home/runner/work/}"
-#                 modified_path=$(echo "$trimmed_path" | tr '/' '-')
-#                 echo "$modified_path"
-#               done
-#     - uses: actions/checkout@v3
-#     - name: Run Hadolint (JSON report)
-#       uses: hadolint/hadolint-action@v3.1.0
-#       with:
-#         no-fail: true
-#         dockerfile: 
-#         format: json
-#         output-file: 
-#     - name: Upload Hadolint (JSON report)
-#       uses: actions/upload-artifact@v4
-#       with:
-#         name: 
-#         path: 
-#         retention-days: 1
-
-
-  
-    # - name: Run Hadolint (Text report)
-    #   uses: hadolint/hadolint-action@v3.1.0
-    #   with:
-    #     no-fail: true
-    #     recursive: true
-    #     format: tty
-    #     output-file: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-hadolint.txt"
-    # - name: Upload Hadolint (Text report)
-    #   uses: actions/upload-artifact@v4
-    #   with:
-    #     name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-hadolint-txt
-    #     path: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-hadolint.txt
-    #     retention-days: 1 
+          echo "Saved report to $report_name"
+          cat $report_name
+        done
+    - name: Upload Hadolint (Text report)
+      uses: actions/upload-artifact@v4
+      with:
+        name: hadolint-reports
+        path: '*-hadolint.txt'
