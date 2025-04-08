@@ -1,56 +1,47 @@
-name: Lint Dockerfiles
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v4
 
-on:
-  push:
-    paths:
-      - '**Dockerfile**'
-  workflow_dispatch:
+    - name: Install jq (required for JSON handling)
+      shell: bash
+      run: sudo apt-get update && sudo apt-get install -y jq
 
-jobs:
-  generate-matrix:
-    runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+    - name: Find and scan Dockerfiles with Hadolint
+      shell: bash
+      run: |
+        echo "Finding Dockerfiles..."
+        mapfile -t files < <(find . -type f \( -iname "dockerfile*" -o -iname "*dockerfile*" \) -not -path "*/.git/*" | sort)
 
-      - name: Find Dockerfiles
-        id: set-matrix
-        run: |
-          files=$(find . -type f \( -iname "dockerfile*" -o -iname "*dockerfile*" \) -not -path "*/.git/*" | sort)
-          echo "Found files:"
-          echo "$files"
+        if [ ${#files[@]} -eq 0 ]; then
+          echo "No Dockerfiles found. Exiting."
+          exit 0
+        fi
 
-          json_list=$(printf '%s\n' "$files" | jq -R . | jq -s .)
-          echo "matrix=$json_list" >> $GITHUB_OUTPUT
+        for file in "${files[@]}"; do
+          echo "Scanning: $file"
+          flat_name=$(echo "$file" | tr '/' '-' | sed 's/^-//')
+          report_name="${flat_name}-hadolint.json"
 
-  run-hadolint:
-    needs: generate-matrix
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        file: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
-    name: Hadolint ${{ matrix.file }}
-    steps:
-      - uses: actions/checkout@v4
+          docker run --rm -i -v "$(pwd)":/mnt hadolint/hadolint < "$file" \
+            | jq -s '.' > "$report_name"
 
-      - name: Run Hadolint
-        uses: hadolint/hadolint-action@v3.1.0
-        with:
-          dockerfile: ${{ matrix.file }}
-          format: json
-          output-file: |
-            ${{ matrix.file }}.hadolint.json
-          no-fail: true
+          echo "Saved report to $report_name"
+        done
 
-      - name: Upload Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.file }}-report
-          path: ${{ matrix.file }}.hadolint.json
-          retention-days: 1
+    - name: Upload all Hadolint reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: hadolint-reports
+        path: '*-hadolint.json'
+
+
+
+
+
+
+
 
 # runs:
 #   using: 'composite'
