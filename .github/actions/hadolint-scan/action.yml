@@ -33,7 +33,7 @@ runs:
           
           docker run --rm -i --entrypoint /bin/hadolint \
             hadolint/hadolint --no-fail -f json - < "$file" | \
-            jq '.[].file |= $trimmed_path' > "$report_name"
+            jq '.[].file |= "$trimmed_path"' > "$report_name"
           
           echo "Saved report to $report_name"
           cat $report_name
