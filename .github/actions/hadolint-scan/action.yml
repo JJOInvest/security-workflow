@@ -14,8 +14,6 @@ runs:
     - name: Find and scan Dockerfiles with Hadolint
       shell: bash
       run: |
-        set -x
-        
         echo "Finding Dockerfiles..."
         mapfile -t files < <(find . -type f \( -iname "dockerfile*" -o -iname "*dockerfile*" \) -not -path "*/.git/*" | sort)
         if [ ${#files[@]} -eq 0 ]; then
@@ -28,7 +26,7 @@ runs:
           flat_name=$(echo "$file" | tr '/' '-' | sed 's/^-//')
           report_name="${flat_name}-hadolint.json"
           docker run --rm -i --entrypoint /bin/hadolint \
-            hadolint/hadolint -f json - < "$file" | \
+            hadolint/hadolint -f json - < $file | \
             jq '.[].file |= "$file"' > "$report_name"
           echo "Saved report to $report_name"
         done
