@@ -39,11 +39,11 @@ runs:
           cat $report_name
         done
 
-        - name: Upload all Hadolint reports
-          uses: actions/upload-artifact@v4
-          with:
-            name: hadolint-reports
-            path: '*-hadolint.json'
+    - name: Upload all Hadolint reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: hadolint-reports
+        path: '*-hadolint.json'
 
 
 
