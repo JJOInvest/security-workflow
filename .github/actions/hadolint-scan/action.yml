@@ -52,7 +52,7 @@ runs:
 
           docker run --rm -i --entrypoint /bin/hadolint hadolint/hadolint \
             --no-fail -f tty - < Dockerfile 2>&1 | \
-            sed 's|^-:|$trimmed_path:|g'
+            sed "s|^-:|$trimmed_path:|g"
 
           echo "Saved report to $report_name"
           cat $report_name
