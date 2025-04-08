@@ -30,7 +30,7 @@ runs:
         for file in "${files[@]}"; do
           trimmed_path="${file#/home/runner/work/}"
           
-          echo "Scanning: $trimmed_path"
+          echo "Scanning: $file"
           
           flat_name=$(echo "$trimmed_path" | tr '/' '-' | sed 's/^-//')
           report_name="${flat_name}-hadolint.json"
