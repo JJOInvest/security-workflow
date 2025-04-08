@@ -50,7 +50,6 @@ runs:
           trimmed_path="${file#/home/runner/work/}"
           
           echo "Scanning: $trimmed_path"
-          echo
           
           flat_name=$(echo "$trimmed_path" | tr '/' '-' | sed 's/^-//')
           report_name="${flat_name}-hadolint.txt"        
@@ -60,10 +59,8 @@ runs:
             sed "s|^-:|$trimmed_path:|g" > "$report_name"
 
           echo "Saved report to $report_name"
-          echo
           cat "$report_name"
           echo "========================================================="
-          echo
         done
     - name: Upload Hadolint (Text report)
       uses: actions/upload-artifact@v4
