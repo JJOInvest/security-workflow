@@ -20,6 +20,8 @@ runs:
           echo "No Dockerfiles found. Exiting."
           exit 0
         fi
+        
+        echo ${files[@]}
 
         for file in "${files[@]}"; do
           echo "Scanning: $file"
