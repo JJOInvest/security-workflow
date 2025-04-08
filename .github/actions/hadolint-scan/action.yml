@@ -15,8 +15,6 @@ runs:
       shell: bash
       run: |
         echo "Finding Dockerfiles..."
-        cd "$GITHUB_WORKSPACE"
-
         mapfile -t files < <(find . -type f \( -iname "dockerfile*" -o -iname "*dockerfile*" \) -not -path "*/.git/*" | sort)
         if [ ${#files[@]} -eq 0 ]; then
           echo "No Dockerfiles found. Exiting."
@@ -27,26 +25,17 @@ runs:
           echo "Scanning: $file"
           flat_name=$(echo "$file" | tr '/' '-' | sed 's/^-//')
           report_name="${flat_name}-hadolint.json"
-
-          if ! docker run --rm -v "$PWD:/mnt" hadolint/hadolint hadolint -f json "/mnt/${file}" 2> err.log | \
-            jq --arg f "$file" '.[].file |= $f' > "$report_name"; then
-
-            echo "⚠️ Hadolint scan failed for: $file"
-            cat err.log
-            rm -f "$report_name"
-            continue
-          fi
-
-          echo "✅ Saved report to $report_name"
+          docker run --rm -i --entrypoint /bin/hadolint \
+            hadolint/hadolint -f json - < "$file" | \
+            jq '.[].file |= "$file"' > "$report_name"
+          echo "Saved report to $report_name"
         done
-
 
     - name: Upload all Hadolint reports
       uses: actions/upload-artifact@v4
       with:
         name: hadolint-reports
         path: '*-hadolint.json'
-
 
 
 
