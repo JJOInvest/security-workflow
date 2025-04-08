@@ -32,6 +32,10 @@ runs:
       with:
         name: hadolint-reports-json
         path: '*-hadolint.json'
+    - name: Clean runner for next scan
+      shell: bash
+      run: |
+        rm *-hadolint.json
     - name: Run Hadolint (Text report)
       shell: bash
       run: |
