@@ -30,7 +30,7 @@ runs:
     - name: Upload Hadolint (JSON report)
       uses: actions/upload-artifact@v4
       with:
-        name: hadolint-reports
+        name: hadolint-reports-json
         path: '*-hadolint.json'
     - name: Run Hadolint (Text report)
       shell: bash
@@ -48,10 +48,11 @@ runs:
           echo "Scanning: $file"
           
           flat_name=$(echo "$trimmed_path" | tr '/' '-' | sed 's/^-//')
-          report_name="${flat_name}-hadolint.txt"
+          report_name="${flat_name}-hadolint.txt"        
 
-          docker run --rm -i --entrypoint /bin/hadolint \
-            hadolint/hadolint --no-fail -f tty - < "$file" > "$report_name"          
+          docker run --rm -i --entrypoint /bin/hadolint hadolint/hadolint \
+            --no-fail -f tty - < Dockerfile 2>&1 | \
+            sed 's|^-:|$trimmed_path:|g'
 
           echo "Saved report to $report_name"
           cat $report_name
@@ -59,5 +60,5 @@ runs:
     - name: Upload Hadolint (Text report)
       uses: actions/upload-artifact@v4
       with:
-        name: hadolint-reports
+        name: hadolint-reports-txt
         path: '*-hadolint.txt'
