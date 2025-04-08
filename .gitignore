@@ -1,5 +1,6 @@
 **/.DS_Store
-.github/actions/cs/analyze/*
+.github/actions/trivy-grype-scan-image/analyze/*
 scope.md
 flow.md
 changelog.md
+Dockerfile
