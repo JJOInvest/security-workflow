@@ -1,3 +1,6 @@
+          # docker run --rm -i -v "$(pwd)":/mnt hadolint/hadolint < "$file" \
+          #   | jq -s '.' > "$report_name"
+
 runs:
   using: 'composite'
   steps:
@@ -24,8 +27,9 @@ runs:
           flat_name=$(echo "$file" | tr '/' '-' | sed 's/^-//')
           report_name="${flat_name}-hadolint.json"
 
-          docker run --rm -i -v "$(pwd)":/mnt hadolint/hadolint < "$file" \
-            | jq -s '.' > "$report_name"
+          docker run --rm -i --entrypoint /bin/hadolint \
+            hadolint/hadolint -f json - < "$file" | \
+            jq '.[].file |= "$file"' > "$report_name"
 
           echo "Saved report to $report_name"
         done
