@@ -21,6 +21,8 @@ runs:
           exit 0
         fi
 
+        cat $file
+
         for file in "${files[@]}"; do
           echo "Scanning: $file"
           flat_name=$(echo "$file" | tr '/' '-' | sed 's/^-//')
