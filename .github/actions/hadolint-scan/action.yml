@@ -14,7 +14,7 @@ runs:
     - name: Find and scan Dockerfiles with Hadolint
       shell: bash
       run: |
-        docker run --rm -i --entrypoint /bin/hadolint hadolint/hadolint -f json - < $GITHUB_WORKSPACE/.github/workflows/Dockerfile | jq '.[].file |= "CustomDockerfile"' > test-hadolint.json
+        docker run --rm -i --entrypoint /bin/hadolint hadolint/hadolint -f json - < $GITHUB_WORKSPACE/.github/workflows/Dockerfile > test-hadolint.json
 
 
     # - name: Find and scan Dockerfiles with Hadolint
