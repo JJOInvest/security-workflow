@@ -40,6 +40,7 @@ runs:
             jq '.[].file |= "$trimmed_path"' > "$report_name"
           
           echo "Saved report to $report_name"
+          cat $report_name
         done
 
         - name: Upload all Hadolint reports
