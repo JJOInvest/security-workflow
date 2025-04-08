@@ -21,9 +21,9 @@ runs:
           exit 0
         fi
 
-        cat $file
-
         for file in "${files[@]}"; do
+          cat $file
+
           echo "Scanning: $file"
           flat_name=$(echo "$file" | tr '/' '-' | sed 's/^-//')
           report_name="${flat_name}-hadolint.json"
