@@ -17,32 +17,36 @@ runs:
         cat $GITHUB_WORKSPACE/.github/workflows/Dockerfile
         docker run --rm -i --entrypoint /bin/hadolint hadolint/hadolint --no-fail -f json - < $GITHUB_WORKSPACE/.github/workflows/Dockerfile
 
-
-    - name: Find and scan Dockerfiles with Hadolint
+    - name: Find and scan Dockerfiles with Hadolint 2
       shell: bash
       run: |
         echo "Finding Dockerfiles..."
-        mapfile -t files < <(find . -type f \( -iname "dockerfile*" -o -iname "*dockerfile*" \) -not -path "*/.git/*" | sort)
+        mapfile -t files < <(find $GITHUB_WORKSPACE -type f \( -iname "dockerfile*" -o -iname "*dockerfile*" \) -not -path "*/.git/*" | sort)
         if [ ${#files[@]} -eq 0 ]; then
           echo "No Dockerfiles found. Exiting."
           exit 0
         fi
 
         for file in "${files[@]}"; do
-          echo "Scanning: $file"
-          flat_name=$(echo "$file" | tr '/' '-' | sed 's/^-//')
+          trimmed_path="${file#/home/runner/work/}"
+          
+          echo "Scanning: $trimmed_path"
+          
+          flat_name=$(echo "$trimmed_path" | tr '/' '-' | sed 's/^-//')
           report_name="${flat_name}-hadolint.json"
+          
           docker run --rm -i --entrypoint /bin/hadolint \
             hadolint/hadolint --no-fail -f json - < "$file" | \
-            jq '.[].file |= "'"$file"'"' > "$report_name"
+            jq '.[].file |= "$trimmed_path"' > "$report_name"
+          
           echo "Saved report to $report_name"
         done
 
-    - name: Upload all Hadolint reports
-      uses: actions/upload-artifact@v4
-      with:
-        name: hadolint-reports
-        path: '*-hadolint.json'
+        - name: Upload all Hadolint reports
+          uses: actions/upload-artifact@v4
+          with:
+            name: hadolint-reports
+            path: '*-hadolint.json'
 
 
 
