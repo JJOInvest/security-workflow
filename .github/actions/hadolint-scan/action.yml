@@ -1,58 +1,93 @@
-# inputs:
-#   GITHUB_REF:
-#     type: string
-#     required: true
-#   SERVICE_NAME:
-#     type: string
-#     required: true
+name: Lint Dockerfiles
 
-runs:
-  using: 'composite'
-  steps:
-    - uses: actions/checkout@v4.1.7
-      with:
-        fetch-depth: 0
-    - name: Find all Dockerfiles recursively
-      shell: bash
-      run: |
-        echo "hahaha"
-        find $GITHUB_WORKSPACE -type f \( -iname "dockerfile*" -o -iname "*dockerfile*" \) -not -path "*/.git/*" | sort
-        echo "hahaha 2"
-        find "$GITHUB_WORKSPACE" -type f \( -iname "dockerfile*" -o -iname "*dockerfile*" \) \
-            -not -path "*/.git/*" \
-            | sort \
-            | while read -r fullpath; do
-                trimmed_path="${fullpath#/home/runner/work/}"
-                modified_path=$(echo "$trimmed_path" | tr '/' '-')
-                echo "$modified_path"
-              done
-      #   dockerfiles=($(find . -type f -name "*Dockerfile*" -o -name "*dockerfile*"))
-      #   echo "dockerfiles=${dockerfiles[@]}" >> $GITHUB_OUTPUT
-      #   echo "Found Dockerfiles:"
-      #   printf '%s\n' "${dockerfiles[@]}"
-      # id: find_dockerfiles
+on:
+  push:
+    paths:
+      - '**Dockerfile**'
+  workflow_dispatch:
 
-    # - name: Extract tag name
-    #   shell: bash
-    #   run: |
-    #     # Extract tag name
+jobs:
+  generate-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    #     echo "tag=${GITHUB_HEAD_REF:-${{ inputs.GITHUB_REF }}}" >> $GITHUB_OUTPUT
-    #   id: extract_tag
-    # - uses: actions/checkout@v3
-    # - name: Run Hadolint (JSON report)
-    #   uses: hadolint/hadolint-action@v3.1.0
-    #   with:
-    #     no-fail: true
-    #     recursive: true
-    #     format: json
-    #     output-file: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-hadolint.json"
-    # - name: Upload Hadolint (JSON report)
-    #   uses: actions/upload-artifact@v4
-    #   with:
-    #     name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-hadolint-json
-    #     path: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-hadolint.json
-    #     retention-days: 1
+      - name: Find Dockerfiles
+        id: set-matrix
+        run: |
+          files=$(find . -type f \( -iname "dockerfile*" -o -iname "*dockerfile*" \) -not -path "*/.git/*" | sort)
+          echo "Found files:"
+          echo "$files"
+
+          json_list=$(printf '%s\n' "$files" | jq -R . | jq -s .)
+          echo "matrix=$json_list" >> $GITHUB_OUTPUT
+
+  run-hadolint:
+    needs: generate-matrix
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        file: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
+    name: Hadolint ${{ matrix.file }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Hadolint
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: ${{ matrix.file }}
+          format: json
+          output-file: |
+            ${{ matrix.file }}.hadolint.json
+          no-fail: true
+
+      - name: Upload Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.file }}-report
+          path: ${{ matrix.file }}.hadolint.json
+          retention-days: 1
+
+# runs:
+#   using: 'composite'
+#   steps:
+#     - uses: actions/checkout@v4.1.7
+#       with:
+#         fetch-depth: 0
+#     - name: Find all Dockerfiles recursively
+#       shell: bash
+#       run: |
+#         find $GITHUB_WORKSPACE -type f \( -iname "dockerfile*" -o -iname "*dockerfile*" \) -not -path "*/.git/*" | sort
+
+#         find "$GITHUB_WORKSPACE" -type f \( -iname "dockerfile*" -o -iname "*dockerfile*" \) \
+#             -not -path "*/.git/*" \
+#             | sort \
+#             | while read -r fullpath; do
+#                 trimmed_path="${fullpath#/home/runner/work/}"
+#                 modified_path=$(echo "$trimmed_path" | tr '/' '-')
+#                 echo "$modified_path"
+#               done
+#     - uses: actions/checkout@v3
+#     - name: Run Hadolint (JSON report)
+#       uses: hadolint/hadolint-action@v3.1.0
+#       with:
+#         no-fail: true
+#         dockerfile: 
+#         format: json
+#         output-file: 
+#     - name: Upload Hadolint (JSON report)
+#       uses: actions/upload-artifact@v4
+#       with:
+#         name: 
+#         path: 
+#         retention-days: 1
+
+
+  
     # - name: Run Hadolint (Text report)
     #   uses: hadolint/hadolint-action@v3.1.0
     #   with:
