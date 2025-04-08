@@ -15,7 +15,7 @@ runs:
       shell: bash
       run: |
         echo "Finding Dockerfiles..."
-        mapfile -t files < <(find . -type f \( -iname "dockerfile*" -o -iname "*dockerfile*" \) -not -path "*/.git/*" | sort)
+        mapfile -t files < <(find $GITHUB_WORKSPACE -type f \( -iname "dockerfile*" -o -iname "*dockerfile*" \) -not -path "*/.git/*" | sort)
         if [ ${#files[@]} -eq 0 ]; then
           echo "No Dockerfiles found. Exiting."
           exit 0
