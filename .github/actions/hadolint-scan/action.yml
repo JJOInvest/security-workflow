@@ -14,31 +14,37 @@ runs:
     - name: Find and scan Dockerfiles with Hadolint
       shell: bash
       run: |
-        echo "Finding Dockerfiles..."
-        mapfile -t files < <(find . -type f \( -iname "dockerfile*" -o -iname "*dockerfile*" \) -not -path "*/.git/*" | sort)
-        if [ ${#files[@]} -eq 0 ]; then
-          echo "No Dockerfiles found. Exiting."
-          exit 0
-        fi
+        docker run --rm -i --entrypoint /bin/hadolint hadolint/hadolint -f json - < ./.github/workflows/Dockerfile | jq '.[].file |= "CustomDockerfile"' > test-hadolint.json
 
-        echo ${files[@]}
 
-        for file in "${files[@]}"; do
-          echo "Scanning: $file"
-          flat_name=$(echo "$file" | tr '/' '-' | sed 's/^-//')
-          report_name="${flat_name}-hadolint.json"
+    # - name: Find and scan Dockerfiles with Hadolint
+    #   shell: bash
+    #   run: |
+    #     echo "Finding Dockerfiles..."
+    #     mapfile -t files < <(find . -type f \( -iname "dockerfile*" -o -iname "*dockerfile*" \) -not -path "*/.git/*" | sort)
+    #     if [ ${#files[@]} -eq 0 ]; then
+    #       echo "No Dockerfiles found. Exiting."
+    #       exit 0
+    #     fi
 
-          # Читаем содержимое файла через cat и передаем в контейнер Hadolint через stdin
-          if ! cat "$file" | docker run --rm -i --entrypoint /bin/hadolint \
-            hadolint/hadolint -f json - 2> error.log | jq --arg f "$file" '.[].file |= $f' > "$report_name"; then
-            echo "⚠️ Hadolint scan failed for: $file"
-            echo "Error details:"
-            cat error.log
-            continue
-          fi
+    #     echo ${files[@]}
 
-          echo "✅ Saved report to $report_name"
-        done
+    #     for file in "${files[@]}"; do
+    #       echo "Scanning: $file"
+    #       flat_name=$(echo "$file" | tr '/' '-' | sed 's/^-//')
+    #       report_name="${flat_name}-hadolint.json"
+
+    #       # Читаем содержимое файла через cat и передаем в контейнер Hadolint через stdin
+    #       if ! cat "$file" | docker run --rm -i --entrypoint /bin/hadolint \
+    #         hadolint/hadolint -f json - 2> error.log | jq --arg f "$file" '.[].file |= $f' > "$report_name"; then
+    #         echo "⚠️ Hadolint scan failed for: $file"
+    #         echo "Error details:"
+    #         cat error.log
+    #         continue
+    #       fi
+
+    #       echo "✅ Saved report to $report_name"
+    #     done
 
 
     - name: Upload all Hadolint reports
