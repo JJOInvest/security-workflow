@@ -2,6 +2,12 @@ inputs:
   defectdojo-url:
     required: true
     description: 'DefectDojo URL'
+  defectdojo-username:
+    required: true
+    description: 'DefectDojo Username'
+  defectdojo-password:
+    required: true
+    description: 'DefectDojo pwd'
   defectdojo-token:
     required: true
     description: 'DefectDojo API Key'
@@ -98,6 +104,21 @@ runs:
         -e DD_EXTRA_HEADER_2_VALUE \
         -v $(pwd):/usr/local/dd-import/results \
         maibornwolff/dd-import:latest dd-reimport-findings.sh
+
+    - name: defectdojo_findings-threshold
+      id: defectdojo-findings-threshold
+      uses: portswigger-cloud/defectdojo-active-findings@main
+      with:
+        defectdojo-url: ${{ inputs.defectdojo-url }}
+        defectdojo-username: ${{ inputs.defectdojo-username }}
+        defectdojo-password: ${{ inputs.defectdojo-password }}
+        defectdojo-product: ${{ github.event.repository.name }}
+        total-threshold: 100
+        critical-threshold: 10 
+        high-threshold: 30
+        medium-threshold: 50
+        low-threshold: 100
+        info-threshold: 1000
 
     - name: Upload gitleaks report to artifacts
       uses: actions/upload-artifact@v4
