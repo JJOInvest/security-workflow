@@ -96,7 +96,7 @@ runs:
         -e DD_EXTRA_HEADER_1_VALUE \
         -e DD_EXTRA_HEADER_2 \
         -e DD_EXTRA_HEADER_2_VALUE \
-        -v $(pwd):/usr/local/dd-import/ \
+        -v $(pwd):/usr/local/dd-import \
         maibornwolff/dd-import:latest dd-reimport-findings.sh
 
     - name: Upload gitleaks report to artifacts
