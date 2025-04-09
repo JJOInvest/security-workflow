@@ -5,12 +5,12 @@ inputs:
   defectdojo-token:
     required: true
     description: 'DefectDojo API Key'
-  aws-key:
+  cf-access-client-id:
     required: true
-    description: 'AWS access key id'
-  aws-secret-key:
+    description: 'CF access client id'
+  cf-access-client-secret:
     required: true
-    description: 'AWS secret access key'
+    description: 'CF access client secret'
 
 runs:
   using: 'composite'
@@ -60,6 +60,13 @@ runs:
     #  run: |
     #    python -m pip install --upgrade pip
     #    pip install setuptools dd-import
+    - name: Setup CF WARP
+      uses: Boostport/setup-cloudflare-warp@v1
+      with:
+        organization: jjofinance
+        auth_client_id: ${{ inputs.cf-access-client-id }}
+        auth_client_secret: ${{ inputs.cf-access-client-secret }}
+
     - name: Upload Gitleaks Report to DefectDojo
       shell: bash
       env:
@@ -71,30 +78,22 @@ runs:
         DD_TEST_NAME: Gitleaks
         DD_TEST_TYPE_NAME: Gitleaks Scan
         DD_FILE_NAME: gitleaks-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}.json
-        DD_EXTRA_HEADER_1: AWS_ACCESS_KEY_ID
-        DD_EXTRA_HEADER_1_VALUE: ${{ inputs.aws-key }}
-        DD_EXTRA_HEADER_2: AWS_SECRET_ACCESS_KEY
-        DD_EXTRA_HEADER_2_VALUE: ${{ inputs.aws-secret-key }}
+      #  DD_EXTRA_HEADER_1: CF-Access-Client-Id
+      #  DD_EXTRA_HEADER_1_VALUE: ${{ inputs.cf-access-client-id }}
+      #  DD_EXTRA_HEADER_2: ACF-Access-Client-Secret
+      #  DD_EXTRA_HEADER_2_VALUE: ${{ inputs.cf-access-client-secret }}
       run: |
-        curl -H "CF-Access-Client-ID: $DD_EXTRA_HEADER_1_VALUE" \
-        -H "CF-Access-Client-Secret: $DD_EXTRA_HEADER_2_VALUE" \
-        -H "Authorization: Token $DD_API_KEY" \
-        $DD_URL/api/v2/products/
-      #  docker run --rm \
-      #  -e DD_URL \
-      #  -e DD_API_KEY \
-      #  -e DD_PRODUCT_TYPE_NAME \
-      #  -e DD_PRODUCT_NAME \
-      #  -e DD_ENGAGEMENT_NAME \
-      #  -e DD_TEST_NAME \
-      #  -e DD_TEST_TYPE_NAME \
-      #  -e DD_FILE_NAME \
-      #  -e DD_EXTRA_HEADER_1 \
-      #  -e DD_EXTRA_HEADER_1_VALUE \
-      #  -e DD_EXTRA_HEADER_2 \
-      #  -e DD_EXTRA_HEADER_2_VALUE \
-      #  -v $(pwd):/usr/local/dd-import/results \
-      #  maibornwolff/dd-import:latest dd-reimport-findings.sh
+        docker run --rm \
+        -e DD_URL \
+        -e DD_API_KEY \
+        -e DD_PRODUCT_TYPE_NAME \
+        -e DD_PRODUCT_NAME \
+        -e DD_ENGAGEMENT_NAME \
+        -e DD_TEST_NAME \
+        -e DD_TEST_TYPE_NAME \
+        -e DD_FILE_NAME \
+        -v $(pwd):/usr/local/dd-import/results \
+        maibornwolff/dd-import:latest dd-reimport-findings.sh
 
     - name: Upload gitleaks report to artifacts
       uses: actions/upload-artifact@v4
