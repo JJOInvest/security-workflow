@@ -60,12 +60,12 @@ runs:
     #  run: |
     #    python -m pip install --upgrade pip
     #    pip install setuptools dd-import
-    - name: Setup CF WARP
-      uses: Boostport/setup-cloudflare-warp@v1
-      with:
-        organization: jjofinance
-        auth_client_id: ${{ inputs.cf-access-client-id }}
-        auth_client_secret: ${{ inputs.cf-access-client-secret }}
+    #- name: Setup CF WARP
+    #  uses: Boostport/setup-cloudflare-warp@v1
+    #  with:
+    #    organization: jjofinance
+    #    auth_client_id: ${{ inputs.cf-access-client-id }}
+    #    auth_client_secret: ${{ inputs.cf-access-client-secret }}
 
     - name: Upload Gitleaks Report to DefectDojo
       shell: bash
@@ -78,10 +78,10 @@ runs:
         DD_TEST_NAME: Gitleaks
         DD_TEST_TYPE_NAME: Gitleaks Scan
         DD_FILE_NAME: gitleaks-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}.json
-      #  DD_EXTRA_HEADER_1: CF-Access-Client-Id
-      #  DD_EXTRA_HEADER_1_VALUE: ${{ inputs.cf-access-client-id }}
-      #  DD_EXTRA_HEADER_2: ACF-Access-Client-Secret
-      #  DD_EXTRA_HEADER_2_VALUE: ${{ inputs.cf-access-client-secret }}
+        DD_EXTRA_HEADER_1: CF-Access-Client-Id
+        DD_EXTRA_HEADER_1_VALUE: ${{ inputs.cf-access-client-id }}
+        DD_EXTRA_HEADER_2: ACF-Access-Client-Secret
+        DD_EXTRA_HEADER_2_VALUE: ${{ inputs.cf-access-client-secret }}
       run: |
         docker run --rm \
         -e DD_URL \
@@ -92,6 +92,10 @@ runs:
         -e DD_TEST_NAME \
         -e DD_TEST_TYPE_NAME \
         -e DD_FILE_NAME \
+        -e DD_EXTRA_HEADER_1 \
+        -e DD_EXTRA_HEADER_1_VALUE \
+        -e DD_EXTRA_HEADER_2 \
+        -e DD_EXTRA_HEADER_2_VALUE \
         -v $(pwd):/usr/local/dd-import/results \
         maibornwolff/dd-import:latest dd-reimport-findings.sh
 
