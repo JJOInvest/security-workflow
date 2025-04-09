@@ -35,7 +35,11 @@ runs:
     - name: Clean runner for next scan
       shell: bash
       run: |
-        rm *-hadolint.json
+        if ls *-hadolint.json 1> /dev/null 2>&1; then
+          rm *-hadolint.json
+        else
+          echo "No Dockerfiles were found. Skipping..."
+        fi
     - name: Run Hadolint (Text report)
       shell: bash
       run: |
