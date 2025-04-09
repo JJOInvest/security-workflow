@@ -77,7 +77,7 @@ runs:
         DD_ENGAGEMENT_NAME: ${{ github.head_ref || github.ref_name }}
         DD_TEST_NAME: Gitleaks
         DD_TEST_TYPE_NAME: Gitleaks Scan
-        DD_FILE_NAME: gitleaks-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}.json
+        DD_FILE_NAME: ./results/gitleaks-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}.json
         DD_EXTRA_HEADER_1: CF-Access-Client-Id
         DD_EXTRA_HEADER_1_VALUE: ${{ inputs.cf-access-client-id }}
         DD_EXTRA_HEADER_2: CF-Access-Client-Secret
@@ -96,7 +96,7 @@ runs:
         -e DD_EXTRA_HEADER_1_VALUE \
         -e DD_EXTRA_HEADER_2 \
         -e DD_EXTRA_HEADER_2_VALUE \
-        -v $(pwd):/usr/local/dd-import \
+        -v $(pwd):/usr/local/dd-import/results \
         maibornwolff/dd-import:latest dd-reimport-findings.sh
 
     - name: Upload gitleaks report to artifacts
