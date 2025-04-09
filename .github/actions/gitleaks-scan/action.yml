@@ -80,7 +80,7 @@ runs:
         DD_FILE_NAME: gitleaks-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}.json
         DD_EXTRA_HEADER_1: CF-Access-Client-Id
         DD_EXTRA_HEADER_1_VALUE: ${{ inputs.cf-access-client-id }}
-        DD_EXTRA_HEADER_2: ACF-Access-Client-Secret
+        DD_EXTRA_HEADER_2: CF-Access-Client-Secret
         DD_EXTRA_HEADER_2_VALUE: ${{ inputs.cf-access-client-secret }}
       run: |
         docker run --rm \
