@@ -107,11 +107,16 @@ runs:
         DD_ENGAGEMENT_NAME: ${{ github.head_ref || github.ref_name }}
         DD_TEST_NAME: Gitleaks
         DD_TEST_TYPE_NAME: Gitleaks Scan
-      #  DD_FILE_NAME: ./results/gitleaks-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}.json
         DD_EXTRA_HEADER_1: CF-Access-Client-Id
         DD_EXTRA_HEADER_1_VALUE: ${{ inputs.cf-access-client-id }}
         DD_EXTRA_HEADER_2: CF-Access-Client-Secret
         DD_EXTRA_HEADER_2_VALUE: ${{ inputs.cf-access-client-secret }}
+        TOTAL_THRESHOLD: 100
+        CRITICAL_THRESHOLD: 1
+        HIGH_THRESHOLD: 1
+        MEDIUM_THRESHOLD: 30
+        LOW_THRESHOLD: 0
+        INFO_THRESHOLD: 0
       run: |
         docker run --rm \
         -e DD_URL \
@@ -125,6 +130,12 @@ runs:
         -e DD_EXTRA_HEADER_1_VALUE \
         -e DD_EXTRA_HEADER_2 \
         -e DD_EXTRA_HEADER_2_VALUE \
+        -e TOTAL_THRESHOLD \
+        -e CRITICAL_THRESHOLD \
+        -e HIGH_THRESHOLD \
+        -e MEDIUM_THRESHOLD \
+        -e LOW_THRESHOLD \
+        -e INFO_THRESHOLD \
         -v $(pwd):/usr/local/dd-import/results \
         ghcr.io/jjoinvest/dd-import-qg:latest dd-check-thresholds.sh
         
