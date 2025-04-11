@@ -55,24 +55,6 @@ runs:
           echo "Error has been occured"
         fi
         
-    #- name: Set up Python 3.12
-    #  id: setup_python
-    #  uses: actions/setup-python@v4
-    #  with:
-    #    python-version: 3.12
-    #- name: Install dependencies
-    #  id: install_dependencies
-    #  shell: bash
-    #  run: |
-    #    python -m pip install --upgrade pip
-    #    pip install setuptools dd-import
-    #- name: Setup CF WARP
-    #  uses: Boostport/setup-cloudflare-warp@v1
-    #  with:
-    #    organization: jjofinance
-    #    auth_client_id: ${{ inputs.cf-access-client-id }}
-    #    auth_client_secret: ${{ inputs.cf-access-client-secret }}
-
     - name: Upload Gitleaks Report to DefectDojo
       shell: bash
       env:
@@ -103,32 +85,36 @@ runs:
         -e DD_EXTRA_HEADER_2 \
         -e DD_EXTRA_HEADER_2_VALUE \
         -v $(pwd):/usr/local/dd-import/results \
-        maibornwolff/dd-import:latest dd-reimport-findings.sh
+        ghcr.io/jjoinvest/dd-import-qg:v1.0 dd-reimport-findings.sh
 
-    - name: defectdojo_findings-threshold
-      id: defectdojo-findings-threshold
-      uses: portswigger-cloud/defectdojo-active-findings@main
-      with:
-        defectdojo-url: ${{ inputs.defectdojo-url }}
-        defectdojo-username: ${{ inputs.defectdojo-username }}
-        defectdojo-password: ${{ inputs.defectdojo-password }}
-        defectdojo-product: ${{ github.event.repository.name }}
-        total-threshold: 100
-        critical-threshold: 10 
-        high-threshold: 30
-        medium-threshold: 50
-        low-threshold: 100
-        info-threshold: 1000
-
-    - name: Upload gitleaks report to artifacts
-      uses: actions/upload-artifact@v4
-      #if: always()
-      with:
-        name: gitleaks-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}-json
-        path: gitleaks-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}.json
-        #retention-days: 1
-
-    #- name: Download scan results artifact
-    #  uses: actions/download-artifact@v4
-    #  with:
-    #    name: gitleaks-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}-json
+    - name: Check Quality Gates
+      shell: bash
+      env:
+        DD_URL: ${{ inputs.defectdojo-url }}
+        DD_API_KEY: ${{ inputs.defectdojo-token }}
+        DD_PRODUCT_TYPE_NAME: JJO
+        DD_PRODUCT_NAME: ${{ github.event.repository.name }}
+        DD_ENGAGEMENT_NAME: ${{ github.head_ref || github.ref_name }}
+        DD_TEST_NAME: Gitleaks
+        DD_TEST_TYPE_NAME: Gitleaks Scan
+      #  DD_FILE_NAME: ./results/gitleaks-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}.json
+        DD_EXTRA_HEADER_1: CF-Access-Client-Id
+        DD_EXTRA_HEADER_1_VALUE: ${{ inputs.cf-access-client-id }}
+        DD_EXTRA_HEADER_2: CF-Access-Client-Secret
+        DD_EXTRA_HEADER_2_VALUE: ${{ inputs.cf-access-client-secret }}
+      run: |
+        docker run --rm \
+        -e DD_URL \
+        -e DD_API_KEY \
+        -e DD_PRODUCT_TYPE_NAME \
+        -e DD_PRODUCT_NAME \
+        -e DD_ENGAGEMENT_NAME \
+        -e DD_TEST_NAME \
+        -e DD_TEST_TYPE_NAME \
+        -e DD_EXTRA_HEADER_1 \
+        -e DD_EXTRA_HEADER_1_VALUE \
+        -e DD_EXTRA_HEADER_2 \
+        -e DD_EXTRA_HEADER_2_VALUE \
+        -v $(pwd):/usr/local/dd-import/results \
+        ghcr.io/jjoinvest/dd-import-qg:v1.0 dd-check-thresholds.sh
+        
