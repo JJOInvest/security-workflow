@@ -17,6 +17,9 @@ inputs:
   cf-access-client-secret:
     required: true
     description: 'CF access client secret'
+  github-token:
+    required: true
+    description: 'GitHub token for ghcr login'
 
 runs:
   using: 'composite'
@@ -60,8 +63,8 @@ runs:
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-        
+        password: ${{ inputs.github-token }}
+
     - name: Upload Gitleaks Report to DefectDojo
       shell: bash
       env:
