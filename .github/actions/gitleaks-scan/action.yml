@@ -30,7 +30,7 @@ runs:
       uses: actions/checkout@v4
 
     - name: debug
-      shall: bash
+      shell: bash
       run: |
         docker login ghcr.io -u ${{ github.actor }} -p ${{ inputs.github-token }}
         echo "Testing auth..."
