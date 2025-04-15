@@ -175,6 +175,7 @@ runs:
         echo "Result: $status_message"
     
     - name: Display final result
+      shell: bash
       run: |
         echo "${{ steps.analyze_results.outputs.status_message }}"
         exit ${{ steps.analyze_results.outputs.exit_code }}
