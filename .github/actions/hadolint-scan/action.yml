@@ -1,10 +1,65 @@
+inputs:
+  defectdojo-url:
+    required: true
+    description: 'DefectDojo URL'
+  defectdojo-token:
+    required: true
+    description: 'DefectDojo API Key'
+  cf-access-client-id:
+    required: true
+    description: 'CF access client id'
+  cf-access-client-secret:
+    required: true
+    description: 'CF access client secret'
+  github-token:
+    required: true
+    description: 'GitHub token for ghcr login'
+
 runs:
   using: 'composite'
   steps:
     - name: Checkout
       uses: actions/checkout@v4
-    - name: Run Hadolint (JSON report)
+    
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ inputs.github-token }}
+    
+    - name: Pull Hadolint image
       shell: bash
+      run: |
+        docker pull hadolint/hadolint
+
+    - name: Pull dd-import image
+      shell: bash
+      run: |
+        docker pull ghcr.io/jjoinvest/dd-import-qg:latest
+
+    - name: Run Hadolint (JSON report) and upload to DefectDojo
+      shell: bash
+      env:
+        DD_URL: ${{ inputs.defectdojo-url }}
+        DD_API_KEY: ${{ inputs.defectdojo-token }}
+        DD_PRODUCT_TYPE_NAME: JJO
+        DD_PRODUCT_NAME: ${{ github.event.repository.name }}
+        DD_ENGAGEMENT_NAME: ${{ github.head_ref || github.ref_name }}
+        #DD_TEST_NAME: Dockerfile scanning
+        DD_TEST_TYPE_NAME: Hadolint Dockerfile check
+        #DD_FILE_NAME: ./results/$report_name
+        DD_EXTRA_HEADER_1: CF-Access-Client-Id
+        DD_EXTRA_HEADER_1_VALUE: ${{ inputs.cf-access-client-id }}
+        DD_EXTRA_HEADER_2: CF-Access-Client-Secret
+        DD_EXTRA_HEADER_2_VALUE: ${{ inputs.cf-access-client-secret }}
+        #Значения QG - выставляем самостоятельно для каждой практики
+        TOTAL_THRESHOLD: 100
+        CRITICAL_THRESHOLD: 1
+        HIGH_THRESHOLD: 1
+        MEDIUM_THRESHOLD: 30
+        LOW_THRESHOLD: 0 #0 - значит, по данному параметру QG нет
+        INFO_THRESHOLD: 0 #0 - значит, по данному параметру QG нет
       run: |
         echo "Finding Dockerfiles..."
         mapfile -t files < <(find $GITHUB_WORKSPACE -type f \( -iname "dockerfile*" -o -iname "*dockerfile*" \) -not -path "*/.git/*" | sort)
@@ -26,12 +81,74 @@ runs:
             jq --arg file "$trimmed_path" '.[].file = $file' > "$report_name"          
 
           echo "Saved report to $report_name"
+
+          short_name=$(echo "$report_name" | sed 's/.*-v2-//; s/-hadolint$//')
+          
+          echo "import $report_name to DefectDojo"
+          docker run --rm \
+          -e DD_URL \
+          -e DD_API_KEY \
+          -e DD_PRODUCT_TYPE_NAME \
+          -e DD_PRODUCT_NAME \
+          -e DD_ENGAGEMENT_NAME \
+          -e DD_TEST_NAME="$short_name Scan"\
+          -e DD_TEST_TYPE_NAME \
+          -e DD_FILE_NAME=./results/$report_name \
+          -e DD_EXTRA_HEADER_1 \
+          -e DD_EXTRA_HEADER_1_VALUE \
+          -e DD_EXTRA_HEADER_2 \
+          -e DD_EXTRA_HEADER_2_VALUE \
+          -v $(pwd):/usr/local/dd-import/results \
+          ghcr.io/jjoinvest/dd-import-qg:latest dd-reimport-findings.sh
+
         done
-    - name: Upload Hadolint (JSON report)
-      uses: actions/upload-artifact@v4
-      with:
-        name: hadolint-reports-json
-        path: '*-hadolint.json'
+     
+
+    #- name: Check Quality Gates
+    #  #джоба падает при старте по событию тега (актуально для продовых воркфлоу в продуктовых репах) и при пуше в main
+    #  continue-on-error: ${{ !(github.ref_type == 'tag' || github.ref == 'refs/heads/main') }}
+    #  shell: bash
+    #  env:
+    #    DD_URL: ${{ inputs.defectdojo-url }}
+    #    DD_API_KEY: ${{ inputs.defectdojo-token }}
+    #    DD_PRODUCT_TYPE_NAME: JJO
+    #    DD_PRODUCT_NAME: ${{ github.event.repository.name }}
+    #    DD_ENGAGEMENT_NAME: ${{ github.head_ref || github.ref_name }}
+    #    DD_TEST_NAME: Secret scanning
+    #    DD_TEST_TYPE_NAME: Gitleaks Scan
+    #    DD_EXTRA_HEADER_1: CF-Access-Client-Id
+    #    DD_EXTRA_HEADER_1_VALUE: ${{ inputs.cf-access-client-id }}
+    #    DD_EXTRA_HEADER_2: CF-Access-Client-Secret
+    #    DD_EXTRA_HEADER_2_VALUE: ${{ inputs.cf-access-client-secret }}
+    #    #Значения QG - выставляем самостоятельно для каждой практики
+    #    TOTAL_THRESHOLD: 100
+    #    CRITICAL_THRESHOLD: 1
+    #    HIGH_THRESHOLD: 1
+    #    MEDIUM_THRESHOLD: 30
+    #    LOW_THRESHOLD: 0 #0 - значит, по данному параметру QG нет
+    #    INFO_THRESHOLD: 0 #0 - значит, по данному параметру QG нет
+    #  run: |
+    #    docker run --rm \
+    #    -e DD_URL \
+    #    -e DD_API_KEY \
+    #    -e DD_PRODUCT_TYPE_NAME \
+    #    -e DD_PRODUCT_NAME \
+    #    -e DD_ENGAGEMENT_NAME \
+    #    -e DD_TEST_NAME \
+    #    -e DD_TEST_TYPE_NAME \
+    #    -e DD_EXTRA_HEADER_1 \
+    #    -e DD_EXTRA_HEADER_1_VALUE \
+    #    -e DD_EXTRA_HEADER_2 \
+    #    -e DD_EXTRA_HEADER_2_VALUE \
+    #    -e TOTAL_THRESHOLD \
+    #    -e CRITICAL_THRESHOLD \
+    #    -e HIGH_THRESHOLD \
+    #    -e MEDIUM_THRESHOLD \
+    #    -e LOW_THRESHOLD \
+    #    -e INFO_THRESHOLD \
+    #    -v $(pwd):/usr/local/dd-import/results \
+    #    ghcr.io/jjoinvest/dd-import-qg:latest dd-check-thresholds.sh
+    
     - name: Clean runner for next scan
       shell: bash
       run: |
@@ -40,6 +157,7 @@ runs:
         else
           echo "No Dockerfiles were found. Skipping..."
         fi
+    
     - name: Run Hadolint (Text report)
       shell: bash
       run: |
@@ -66,6 +184,7 @@ runs:
           cat "$report_name"
           echo "========================================================="
         done
+    
     - name: Upload Hadolint (Text report)
       uses: actions/upload-artifact@v4
       with:
