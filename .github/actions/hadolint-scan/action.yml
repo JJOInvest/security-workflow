@@ -1,0 +1,73 @@
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Run Hadolint (JSON report)
+      shell: bash
+      run: |
+        echo "Finding Dockerfiles..."
+        mapfile -t files < <(find $GITHUB_WORKSPACE -type f \( -iname "dockerfile*" -o -iname "*dockerfile*" \) -not -path "*/.git/*" | sort)
+        if [ ${#files[@]} -eq 0 ]; then
+          echo "No Dockerfiles found. Exiting."
+          exit 0
+        fi
+
+        for file in "${files[@]}"; do
+          trimmed_path="${file#/home/runner/work/}"
+          
+          echo "Scanning: $trimmed_path"
+          
+          flat_name=$(echo "$trimmed_path" | tr '/' '-' | sed 's/^-//')
+          report_name="${flat_name}-hadolint.json"
+
+          docker run --rm -i --entrypoint /bin/hadolint \
+            hadolint/hadolint --no-fail -f json - < "$file" | \
+            jq --arg file "$trimmed_path" '.[].file = $file' > "$report_name"          
+
+          echo "Saved report to $report_name"
+        done
+    - name: Upload Hadolint (JSON report)
+      uses: actions/upload-artifact@v4
+      with:
+        name: hadolint-reports-json
+        path: '*-hadolint.json'
+    - name: Clean runner for next scan
+      shell: bash
+      run: |
+        if ls *-hadolint.json 1> /dev/null 2>&1; then
+          rm *-hadolint.json
+        else
+          echo "No Dockerfiles were found. Skipping..."
+        fi
+    - name: Run Hadolint (Text report)
+      shell: bash
+      run: |
+        echo "Finding Dockerfiles..."
+        mapfile -t files < <(find $GITHUB_WORKSPACE -type f \( -iname "dockerfile*" -o -iname "*dockerfile*" \) -not -path "*/.git/*" | sort)
+        if [ ${#files[@]} -eq 0 ]; then
+          echo "No Dockerfiles found. Exiting."
+          exit 0
+        fi
+
+        for file in "${files[@]}"; do
+          trimmed_path="${file#/home/runner/work/}"
+          
+          echo "Scanning: $trimmed_path"
+          
+          flat_name=$(echo "$trimmed_path" | tr '/' '-' | sed 's/^-//')
+          report_name="${flat_name}-hadolint.txt"        
+
+          docker run --rm -i --entrypoint /bin/hadolint hadolint/hadolint \
+            --no-fail -f tty - < "$file" 2>&1 | \
+            sed "s|^-:|$trimmed_path:|g" > "$report_name"
+
+          echo "Saved report to $report_name"
+          cat "$report_name"
+          echo "========================================================="
+        done
+    - name: Upload Hadolint (Text report)
+      uses: actions/upload-artifact@v4
+      with:
+        name: hadolint-reports-txt
+        path: '*-hadolint.txt'
