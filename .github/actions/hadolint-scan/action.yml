@@ -55,13 +55,16 @@ runs:
         DD_EXTRA_HEADER_2: CF-Access-Client-Secret
         DD_EXTRA_HEADER_2_VALUE: ${{ inputs.cf-access-client-secret }}
         #Значения QG - выставляем самостоятельно для каждой практики
-        TOTAL_THRESHOLD: 0
-        CRITICAL_THRESHOLD: 0
-        HIGH_THRESHOLD: 0
-        MEDIUM_THRESHOLD: 0
-        LOW_THRESHOLD: 0 #0 - значит, по данному параметру QG нет
-        INFO_THRESHOLD: 0 #0 - значит, по данному параметру QG нет
+        TOTAL_THRESHOLD: 0 #0 - значит, по данному параметру QG нет
+        CRITICAL_THRESHOLD: 1 #error level в терминах Hadolint
+        HIGH_THRESHOLD: 1 #warning level в терминах Hadolint
+        MEDIUM_THRESHOLD: 0 #при сканах Hadolint не применимо
+        LOW_THRESHOLD: 0 #при сканах Hadolint не применимо
+        INFO_THRESHOLD: 30 #info level в терминах Hadolint
       run: |
+        
+        declare -a exit_codes=()
+
         echo "Finding Dockerfiles..."
         mapfile -t files < <(find $GITHUB_WORKSPACE -type f \( -iname "dockerfile*" -o -iname "*dockerfile*" \) -not -path "*/.git/*" | sort)
         if [ ${#files[@]} -eq 0 ]; then
@@ -79,7 +82,8 @@ runs:
 
           docker run --rm -i --entrypoint /bin/hadolint \
             hadolint/hadolint --no-fail -f json - < "$file" | \
-            jq --arg file "$trimmed_path" '.[].file = $file' > "$report_name"          
+            jq --arg file "$trimmed_path" '.[].file = $file' > "$report_name"
+          exit_codes+=($?)        
 
           echo "Saved report to $report_name"
 
@@ -87,44 +91,74 @@ runs:
           
           echo "########IMPORT $report_name TO DEFECTDOJO########"
           docker run --rm \
-          -e DD_URL \
-          -e DD_API_KEY \
-          -e DD_PRODUCT_TYPE_NAME \
-          -e DD_PRODUCT_NAME \
-          -e DD_ENGAGEMENT_NAME \
-          -e DD_TEST_NAME="$short_name Scan" \
-          -e DD_TEST_TYPE_NAME \
-          -e DD_FILE_NAME=./results/$report_name \
-          -e DD_EXTRA_HEADER_1 \
-          -e DD_EXTRA_HEADER_1_VALUE \
-          -e DD_EXTRA_HEADER_2 \
-          -e DD_EXTRA_HEADER_2_VALUE \
-          -v $(pwd):/usr/local/dd-import/results \
-          ghcr.io/jjoinvest/dd-import-qg:latest dd-reimport-findings.sh
+            -e DD_URL \
+            -e DD_API_KEY \
+            -e DD_PRODUCT_TYPE_NAME \
+            -e DD_PRODUCT_NAME \
+            -e DD_ENGAGEMENT_NAME \
+            -e DD_TEST_NAME="$short_name Scan" \
+            -e DD_TEST_TYPE_NAME \
+            -e DD_FILE_NAME=./results/$report_name \
+            -e DD_EXTRA_HEADER_1 \
+            -e DD_EXTRA_HEADER_1_VALUE \
+            -e DD_EXTRA_HEADER_2 \
+            -e DD_EXTRA_HEADER_2_VALUE \
+            -v $(pwd):/usr/local/dd-import/results \
+            ghcr.io/jjoinvest/dd-import-qg:latest dd-reimport-findings.sh
+          exit_codes+=($?)
 
           echo "########RUN QG FOR $report_name########"
           docker run --rm \
-          -e DD_URL \
-          -e DD_API_KEY \
-          -e DD_PRODUCT_TYPE_NAME \
-          -e DD_PRODUCT_NAME \
-          -e DD_ENGAGEMENT_NAME \
-          -e DD_TEST_NAME="$short_name Scan" \
-          -e DD_TEST_TYPE_NAME \
-          -e DD_EXTRA_HEADER_1 \
-          -e DD_EXTRA_HEADER_1_VALUE \
-          -e DD_EXTRA_HEADER_2 \
-          -e DD_EXTRA_HEADER_2_VALUE \
-          -e TOTAL_THRESHOLD \
-          -e CRITICAL_THRESHOLD \
-          -e HIGH_THRESHOLD \
-          -e MEDIUM_THRESHOLD \
-          -e LOW_THRESHOLD \
-          -e INFO_THRESHOLD \
-          -v $(pwd):/usr/local/dd-import/results \
-          ghcr.io/jjoinvest/dd-import-qg:latest dd-check-thresholds.sh
+            -e DD_URL \
+            -e DD_API_KEY \
+            -e DD_PRODUCT_TYPE_NAME \
+            -e DD_PRODUCT_NAME \
+            -e DD_ENGAGEMENT_NAME \
+            -e DD_TEST_NAME="$short_name Scan" \
+            -e DD_TEST_TYPE_NAME \
+            -e DD_EXTRA_HEADER_1 \
+            -e DD_EXTRA_HEADER_1_VALUE \
+            -e DD_EXTRA_HEADER_2 \
+            -e DD_EXTRA_HEADER_2_VALUE \
+            -e TOTAL_THRESHOLD \
+            -e CRITICAL_THRESHOLD \
+            -e HIGH_THRESHOLD \
+            -e MEDIUM_THRESHOLD \
+            -e LOW_THRESHOLD \
+            -e INFO_THRESHOLD \
+            -v $(pwd):/usr/local/dd-import/results \
+            ghcr.io/jjoinvest/dd-import-qg:latest dd-check-thresholds.sh
+          qg_exit_code=$?
+          exit_codes+=($qg_exit_code)
+
+          if [ $qg_exit_code -ne 0 ]; then
+            qg_results+=($qg_exit_code)
+          fi
 
         done
+
+        has_qg_failure=0
+        has_other_error=0        
+
+        for code in "${exit_codes[@]}"; do
+          if [ $code -eq 2 ]; then
+            has_qg_failure=1
+          elif [ $code -ne 0 ]; then
+            has_other_error=1
+          fi
+        done
+
+        if [ $has_other_error -eq 1 ]; then
+          echo "‼️ SCAN FAILED ‼️"
+          exit 1
+        elif [ $has_qg_failure -eq 1 ]; then
+          echo "‼️ QUALITY GATES CHECK FAILED ‼️"
+          exit 2
+        else
+          echo "✅ QUALITY GATES CHECK PASSED ✅"
+          exit 0
+        fi
+
     
     - name: Clean runner for next scan
       shell: bash
