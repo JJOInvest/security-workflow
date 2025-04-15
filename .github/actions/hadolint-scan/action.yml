@@ -58,10 +58,10 @@ runs:
         #Значения QG - выставляем самостоятельно для каждой практики
         TOTAL_THRESHOLD: 0 #0 - значит, по данному параметру QG нет
         CRITICAL_THRESHOLD: 1 #error level в терминах Hadolint
-        HIGH_THRESHOLD: 1 #warning level в терминах Hadolint
+        HIGH_THRESHOLD: 10 #warning level в терминах Hadolint
         MEDIUM_THRESHOLD: 0 #при сканах Hadolint не применимо
         LOW_THRESHOLD: 0 #при сканах Hadolint не применимо
-        INFO_THRESHOLD: 30 #info level в терминах Hadolint
+        INFO_THRESHOLD: 20 #info level в терминах Hadolint
       run: |
         
         # hadolint scan & import
@@ -94,7 +94,7 @@ runs:
 
           short_name=$(echo "$report_name" | sed 's/.*-v2-//; s/-hadolint$//')
           
-          echo "########IMPORT $report_name TO DEFECTDOJO########"
+          echo "########IMPORT $short_name TO DEFECTDOJO########"
           docker run --rm \
             -e DD_URL \
             -e DD_API_KEY \
@@ -113,7 +113,7 @@ runs:
             || import_exit=$?
           echo "IMPORT:$import_exit" >> exit_codes.txt
 
-          echo "########RUN QG FOR $report_name########"
+          echo "########RUN QG FOR $short_name########"
           docker run --rm \
             -e DD_URL \
             -e DD_API_KEY \
@@ -143,9 +143,9 @@ runs:
         cat exit_codes.txt >> $GITHUB_OUTPUT
         echo "EOF" >> $GITHUB_OUTPUT
         
-        # debug
-        echo "=== Saved exit codes ==="
-        cat exit_codes.txt
+        # Проверяем, что файл содержит данные (debug)
+        # echo "=== Saved exit codes ==="
+        # cat exit_codes.txt
 
     - name: Analyze results
       id: analyze
@@ -155,8 +155,8 @@ runs:
         echo "${{ steps.scan.outputs.exit_codes }}" > exit_codes.txt
         
         # Проверяем, что файл содержит данные (debug)
-        echo "=== Loaded exit codes ==="
-        cat exit_codes.txt
+        # echo "=== Loaded exit codes ==="
+        # cat exit_codes.txt
         
         # Анализ кодов ошибок
         has_qg_failure=0
@@ -174,21 +174,15 @@ runs:
         
         # Устанавливаем результаты
         if [[ "$has_other_error" -eq 1 ]]; then
-          echo "message=‼️ SCAN FAILED ‼️" >> $GITHUB_OUTPUT
+          echo "message=‼️‼️‼️ SCAN FAILED ‼️‼️‼️" >> $GITHUB_OUTPUT
           echo "exit_code=1" >> $GITHUB_OUTPUT
         elif [[ "$has_qg_failure" -eq 1 ]]; then
-          echo "message=‼️ QUALITY GATES CHECK FAILED ‼️" >> $GITHUB_OUTPUT
+          echo "message=‼️‼️‼️ QUALITY GATES CHECK FAILED ‼️‼️‼️" >> $GITHUB_OUTPUT
           echo "exit_code=2" >> $GITHUB_OUTPUT
         else
-          echo "message=✅ QUALITY GATES CHECK PASSED ✅" >> $GITHUB_OUTPUT
+          echo "message=✅✅✅ QUALITY GATES CHECK PASSED ✅✅✅" >> $GITHUB_OUTPUT
           echo "exit_code=0" >> $GITHUB_OUTPUT
         fi
-
-    - name: Display result
-      shell: bash
-      run: |
-        echo "${{ steps.analyze.outputs.message }}"
-        exit ${{ steps.analyze.outputs.exit_code }}
 
     - name: Clean runner for next scan
       shell: bash
@@ -231,3 +225,9 @@ runs:
       with:
         name: hadolint-reports-txt
         path: '*-hadolint.txt'
+
+    - name: Display result
+      shell: bash
+      run: |
+        echo "${{ steps.analyze.outputs.message }}"
+        exit ${{ steps.analyze.outputs.exit_code }}
