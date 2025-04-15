@@ -86,8 +86,8 @@ runs:
 
           docker run --rm -i --entrypoint /bin/hadolint \
             hadolint/hadolint --no-fail -f json - < "$file" | \
-            jq --arg file "$trimmed_path" '.[].file = $file' > "$report_name"
-          hadolint_exit=$?
+            jq --arg file "$trimmed_path" '.[].file = $file' > "$report_name" \
+            || hadolint_exit=$?
           echo "HADOLINT:$hadolint_exit" >> exit_codes.txt
 
           echo "Saved report to $report_name"
@@ -109,8 +109,8 @@ runs:
             -e DD_EXTRA_HEADER_2 \
             -e DD_EXTRA_HEADER_2_VALUE \
             -v $(pwd):/usr/local/dd-import/results \
-            ghcr.io/jjoinvest/dd-import-qg:latest dd-reimport-findings.sh
-          import_exit=$?
+            ghcr.io/jjoinvest/dd-import-qg:latest dd-reimport-findings.sh \
+            || import_exit=$?
           echo "IMPORT:$import_exit" >> exit_codes.txt
 
           echo "########RUN QG FOR $report_name########"
@@ -133,8 +133,8 @@ runs:
             -e LOW_THRESHOLD \
             -e INFO_THRESHOLD \
             -v $(pwd):/usr/local/dd-import/results \
-            ghcr.io/jjoinvest/dd-import-qg:latest dd-check-thresholds.sh
-          qg_exit=$?
+            ghcr.io/jjoinvest/dd-import-qg:latest dd-check-thresholds.sh \
+            || qg_exit=$?
           echo "QG:$qg_exit" >> exit_codes.txt
         done
 
