@@ -39,7 +39,8 @@ runs:
         docker pull ghcr.io/jjoinvest/dd-import-qg:latest
 
     - name: Run Hadolint (JSON report) and upload to DefectDojo
-      continue-on-error: true
+      id: scan
+      ontinue-on-error: true
       shell: bash
       env:
         DD_URL: ${{ inputs.defectdojo-url }}
@@ -63,7 +64,10 @@ runs:
         INFO_THRESHOLD: 30 #info level в терминах Hadolint
       run: |
         
-        echo "" > exit_codes.txt
+        # hadolint scan & import
+
+        # создаём пустой файл с exit кодами
+        : > exit_codes.txt
 
         echo "Finding Dockerfiles..."
         mapfile -t files < <(find $GITHUB_WORKSPACE -type f \( -iname "dockerfile*" -o -iname "*dockerfile*" \) -not -path "*/.git/*" | sort)
@@ -83,7 +87,8 @@ runs:
           docker run --rm -i --entrypoint /bin/hadolint \
             hadolint/hadolint --no-fail -f json - < "$file" | \
             jq --arg file "$trimmed_path" '.[].file = $file' > "$report_name"
-          echo "HADOLINT:$?" >> exit_codes.txt        
+          hadolint_exit=$?
+          echo "HADOLINT:$hadolint_exit" >> exit_codes.txt
 
           echo "Saved report to $report_name"
 
@@ -105,7 +110,8 @@ runs:
             -e DD_EXTRA_HEADER_2_VALUE \
             -v $(pwd):/usr/local/dd-import/results \
             ghcr.io/jjoinvest/dd-import-qg:latest dd-reimport-findings.sh
-          echo "IMPORT:$?" >> exit_codes.txt
+          import_exit=$?
+          echo "IMPORT:$import_exit" >> exit_codes.txt
 
           echo "########RUN QG FOR $report_name########"
           docker run --rm \
@@ -128,28 +134,36 @@ runs:
             -e INFO_THRESHOLD \
             -v $(pwd):/usr/local/dd-import/results \
             ghcr.io/jjoinvest/dd-import-qg:latest dd-check-thresholds.sh
-          echo "QG:$?" >> exit_codes.txt
-
+          qg_exit=$?
+          echo "QG:$qg_exit" >> exit_codes.txt
         done
 
-        echo "exit_codes.txt content:"
+        # Сохраняем содержимое файла в output
+        echo "exit_codes<<EOF" >> $GITHUB_OUTPUT
+        cat exit_codes.txt >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+        
+        # debug
+        echo "=== Saved exit codes ==="
         cat exit_codes.txt
 
-    - name: Analyze results and set final status
-      id: analyze_results
+    - name: Analyze results
+      id: analyze
       shell: bash
       run: |
-        # Инициализация переменных
+        # Читаем сохранённые коды
+        echo "${{ steps.scan.outputs.exit_codes }}" > exit_codes.txt
+        
+        # Проверяем, что файл содержит данные (debug)
+        echo "=== Loaded exit codes ==="
+        cat exit_codes.txt
+        
+        # Анализ кодов ошибок
         has_qg_failure=0
         has_other_error=0
         
-        # Чтение файла с кодами завершения
-        while IFS= read -r line; do
-          if [[ -z "$line" ]]; then continue; fi
-          
-          # Разделяем тип операции и код завершения
-          operation="${line%:*}"
-          code="${line#*:}"
+        while IFS=: read -r operation code || [ -n "$operation" ]; do
+          code="${code//[^0-9]/}"  # Оставляем только цифры
           
           if [[ "$operation" == "QG" && "$code" -eq 2 ]]; then
             has_qg_failure=1
@@ -157,28 +171,24 @@ runs:
             has_other_error=1
           fi
         done < exit_codes.txt
-    
-        # Формируем итоговый результат
+        
+        # Устанавливаем результаты
         if [[ "$has_other_error" -eq 1 ]]; then
-          echo "::set-output name=status_message::‼️ SCAN FAILED ‼️"
-          echo "::set-output name=exit_code::1"
+          echo "message=‼️ SCAN FAILED ‼️" >> $GITHUB_OUTPUT
+          echo "exit_code=1" >> $GITHUB_OUTPUT
         elif [[ "$has_qg_failure" -eq 1 ]]; then
-          echo "::set-output name=status_message::‼️ QUALITY GATES CHECK FAILED ‼️"
-          echo "::set-output name=exit_code::2"
+          echo "message=‼️ QUALITY GATES CHECK FAILED ‼️" >> $GITHUB_OUTPUT
+          echo "exit_code=2" >> $GITHUB_OUTPUT
         else
-          echo "::set-output name=status_message::✅ QUALITY GATES CHECK PASSED ✅"
-          echo "::set-output name=exit_code::0"
+          echo "message=✅ QUALITY GATES CHECK PASSED ✅" >> $GITHUB_OUTPUT
+          echo "exit_code=0" >> $GITHUB_OUTPUT
         fi
-    
-        # Выводим результат для лога
-        echo "Final status: $(cat exit_codes.txt)"
-        echo "Result: $status_message"
-    
-    - name: Display final result
+
+    - name: Display result
       shell: bash
       run: |
-        echo "${{ steps.analyze_results.outputs.status_message }}"
-        exit ${{ steps.analyze_results.outputs.exit_code }}
+        echo "${{ steps.analyze.outputs.message }}"
+        exit ${{ steps.analyze.outputs.exit_code }}
 
     - name: Clean runner for next scan
       shell: bash
