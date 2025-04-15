@@ -63,7 +63,7 @@ runs:
         INFO_THRESHOLD: 30 #info level в терминах Hadolint
       run: |
         
-        declare -a exit_codes=()
+        echo "" > exit_codes.txt
 
         echo "Finding Dockerfiles..."
         mapfile -t files < <(find $GITHUB_WORKSPACE -type f \( -iname "dockerfile*" -o -iname "*dockerfile*" \) -not -path "*/.git/*" | sort)
@@ -83,7 +83,7 @@ runs:
           docker run --rm -i --entrypoint /bin/hadolint \
             hadolint/hadolint --no-fail -f json - < "$file" | \
             jq --arg file "$trimmed_path" '.[].file = $file' > "$report_name"
-          exit_codes+=($?)        
+          echo "HADOLINT:$?" >> exit_codes.txt        
 
           echo "Saved report to $report_name"
 
@@ -105,7 +105,7 @@ runs:
             -e DD_EXTRA_HEADER_2_VALUE \
             -v $(pwd):/usr/local/dd-import/results \
             ghcr.io/jjoinvest/dd-import-qg:latest dd-reimport-findings.sh
-          exit_codes+=($?)
+          echo "IMPORT:$?" >> exit_codes.txt
 
           echo "########RUN QG FOR $report_name########"
           docker run --rm \
@@ -128,38 +128,57 @@ runs:
             -e INFO_THRESHOLD \
             -v $(pwd):/usr/local/dd-import/results \
             ghcr.io/jjoinvest/dd-import-qg:latest dd-check-thresholds.sh
-          qg_exit_code=$?
-          exit_codes+=($qg_exit_code)
-
-          if [ $qg_exit_code -ne 0 ]; then
-            qg_results+=($qg_exit_code)
-          fi
+          echo "QG:$?" >> exit_codes.txt
 
         done
 
-        has_qg_failure=0
-        has_other_error=0        
+        echo "exit_codes.txt content:"
+        cat exit_codes.txt
 
-        for code in "${exit_codes[@]}"; do
-          if [ $code -eq 2 ]; then
+    - name: Analyze results and set final status
+      id: analyze_results
+      shell: bash
+      run: |
+        # Инициализация переменных
+        has_qg_failure=0
+        has_other_error=0
+        
+        # Чтение файла с кодами завершения
+        while IFS= read -r line; do
+          if [[ -z "$line" ]]; then continue; fi
+          
+          # Разделяем тип операции и код завершения
+          operation="${line%:*}"
+          code="${line#*:}"
+          
+          if [[ "$operation" == "QG" && "$code" -eq 2 ]]; then
             has_qg_failure=1
-          elif [ $code -ne 0 ]; then
+          elif [[ "$code" -ne 0 ]]; then
             has_other_error=1
           fi
-        done
-
-        if [ $has_other_error -eq 1 ]; then
-          echo "‼️ SCAN FAILED ‼️"
-          exit 1
-        elif [ $has_qg_failure -eq 1 ]; then
-          echo "‼️ QUALITY GATES CHECK FAILED ‼️"
-          exit 2
-        else
-          echo "✅ QUALITY GATES CHECK PASSED ✅"
-          exit 0
-        fi
-
+        done < exit_codes.txt
     
+        # Формируем итоговый результат
+        if [[ "$has_other_error" -eq 1 ]]; then
+          echo "::set-output name=status_message::‼️ SCAN FAILED ‼️"
+          echo "::set-output name=exit_code::1"
+        elif [[ "$has_qg_failure" -eq 1 ]]; then
+          echo "::set-output name=status_message::‼️ QUALITY GATES CHECK FAILED ‼️"
+          echo "::set-output name=exit_code::2"
+        else
+          echo "::set-output name=status_message::✅ QUALITY GATES CHECK PASSED ✅"
+          echo "::set-output name=exit_code::0"
+        fi
+    
+        # Выводим результат для лога
+        echo "Final status: $(cat exit_codes.txt)"
+        echo "Result: $status_message"
+    
+    - name: Display final result
+      run: |
+        echo "${{ steps.analyze_results.outputs.status_message }}"
+        exit ${{ steps.analyze_results.outputs.exit_code }}
+
     - name: Clean runner for next scan
       shell: bash
       run: |
