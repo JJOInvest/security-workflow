@@ -101,6 +101,7 @@ runs:
         ghcr.io/jjoinvest/dd-import-qg:latest dd-reimport-findings.sh
 
     - name: Check Quality Gates
+      #джоба падает при старте по событию тега (актуально для продовых воркфлоу в продуктовых репах) и при пуше в main
       continue-on-error: ${{ !(github.ref_type == 'tag' || github.ref == 'refs/heads/main') }}
       shell: bash
       env:
