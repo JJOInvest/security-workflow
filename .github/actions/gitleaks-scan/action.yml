@@ -52,6 +52,14 @@ runs:
           echo "Error has been occured"
         fi
     
+    - name: Upload gitleaks report to artifacts
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: gitleaks-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}-json
+        path: gitleaks-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}.json
+        #retention-days: 1  
+    
     - name: Login to GitHub Container Registry
       uses: docker/login-action@v3
       with:
@@ -141,10 +149,3 @@ runs:
         -v $(pwd):/usr/local/dd-import/results \
         ghcr.io/jjoinvest/dd-import-qg:latest dd-check-thresholds.sh
         
-    - name: Upload gitleaks report to artifacts
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: gitleaks-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}-json
-        path: gitleaks-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}.json
-        #retention-days: 1  
