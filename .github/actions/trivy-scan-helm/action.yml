@@ -8,6 +8,9 @@ inputs:
   CHART_VALUES:
     type: string
     required: true
+  SERVICE_NAME:
+    type: string
+    required: true
 
 runs:
   using: 'composite'
@@ -15,7 +18,24 @@ runs:
     - name: Helm fetch
       shell: bash
       run: |
-        echo "Here will be Trivy"
+        helm template ${{ inputs.SERVICE_NAME }} \
+          ${{ inputs.CHART_NAME }} \
+          --values=${{ inputs.CHART_VALUES }} > ${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}.yaml
+    - name: Run Trivy (JSON report)
+      uses: aquasecurity/trivy-action@0.29.0
+      with:
+        scan-type: "config"
+        hide-progress: false
+        format: "json"
+        scan-ref: "${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}.yaml"
+        output: "${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}.json"
+        exit-code: 0
+    - name: Upload Trivy (JSON report)
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-json
+        path: ${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}.json
+        retention-days: 1
 
     # - name: Run Trivy (JSON report)
     #   uses: aquasecurity/trivy-action@0.29.0
