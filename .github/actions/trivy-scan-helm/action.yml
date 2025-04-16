@@ -18,8 +18,11 @@ runs:
     - name: Helm fetch
       shell: bash
       run: |
+        ls -la 
+        pwd
+        ls -la -R
         helm template ${{ inputs.SERVICE_NAME }} \
-          ${{ inputs.CHART_NAME }} \
+          ./${{ inputs.CHART_NAME }} \
           --values=${{ inputs.CHART_VALUES }} > ${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}.yaml
     - name: Run Trivy (JSON report)
       uses: aquasecurity/trivy-action@0.29.0
