@@ -35,20 +35,29 @@ inputs:
   CHART_VER:
     type: string
     required: true
-  SERVICE_NAME:
+  CHART_VALUES:
     type: string
     required: true
-  CHART_FILE:
+  SERVICE_NAME:
     type: string
     required: true
 
 runs:
   using: 'composite'
   steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
     - name: Helm fetch and template
-      id: helm 
       shell: bash
       run: |
+        helm fetch oci://ghcr.io/jjoinvest/jjo-helm-charts/${{ inputs.CHART_NAME }} \
+          --version ${{ inputs.CHART_VER }} --untar
+
+        helm template ${{ inputs.SERVICE_NAME }} ./${{ inputs.CHART_NAME }} \
+          --values=${{ inputs.CHART_VALUES }} > \
+          ${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.yaml
+
         ls -la 
         pwd
         ls -la -R
@@ -58,7 +67,7 @@ runs:
         scan-type: "config"
         hide-progress: false
         format: "json"
-        scan-ref: "${{ inputs.CHART_FILE }}"
+        scan-ref: "${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.yaml"
         output: "${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.json"
         exit-code: 0
     - name: Upload Trivy (JSON report)
