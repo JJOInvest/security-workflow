@@ -1,33 +1,3 @@
-# inputs:
-#   CHART_NAME:
-#     type: string
-#     required: true
-#   CHART_VER:
-#     type: string
-#     required: true
-#   SERVICE_NAME:
-#     type: string
-#     required: true
-
-# runs:
-#   using: 'composite'
-#   steps:
-#     - name: Run Trivy (JSON report)
-#       uses: aquasecurity/trivy-action@0.29.0
-#       with:
-#         scan-type: "config"
-#         hide-progress: false
-#         format: "json"
-#         scan-ref: "${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.yaml"
-#         output: "${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.json"
-#         exit-code: 0
-#     - name: Upload Trivy (JSON report)
-#       uses: actions/upload-artifact@v4
-#       with:
-#         name: ${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}-json
-#         path: ${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.json
-#         retention-days: 1
-
 inputs:
   CHART_NAME:
     type: string
@@ -57,15 +27,11 @@ runs:
         helm template ${{ inputs.SERVICE_NAME }} ./${{ inputs.CHART_NAME }} \
           --values=${{ inputs.CHART_VALUES }} > \
           ${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.yaml
-
-        ls -la 
-        pwd
-        ls -la -R
     - name: Run Trivy (JSON report)
       uses: aquasecurity/trivy-action@0.29.0
       with:
         scan-type: "config"
-        hide-progress: false
+        hide-progress: true
         format: "json"
         scan-ref: "${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.yaml"
         output: "${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.json"
