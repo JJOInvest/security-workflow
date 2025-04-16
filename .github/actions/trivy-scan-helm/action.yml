@@ -1,0 +1,93 @@
+inputs:
+  CHART_NAME:
+    type: string
+    required: true
+  CHART_VER:
+    type: string
+    required: true
+  CHART_VALUES:
+    type: string
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Helm fetch
+      shell: bash
+      run: |
+        helm registry login ghcr.io/jjoinvest/jjo-helm-charts -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
+        helm fetch oci://ghcr.io/jjoinvest/jjo-helm-charts/${{ inputs.CHART_NAME }} --version ${{ inputs.CHART_VER }} --untar
+        ls -la
+
+    # - name: Run Trivy (JSON report)
+    #   uses: aquasecurity/trivy-action@0.29.0
+    #   with:
+    #     format: "json"
+    #     output: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json"
+    #     exit-code: 0
+
+    # - name: Run Trivy (JSON report)
+    #   if: steps.tool_for_scanning.outputs.scan_tool == 'trivy'
+    #   uses: aquasecurity/trivy-action@0.29.0
+    #   with:
+    #     image-ref: "ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_tag.outputs.tag }}"
+    #     format: "json"
+    #     output: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json"
+    #     exit-code: 0
+    # - name: Upload Trivy (JSON report)
+    #   if: steps.tool_for_scanning.outputs.scan_tool == 'trivy'
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-json
+    #     path: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json
+    #     retention-days: 1
+    # - name: Run Trivy (HTML report)
+    #   if: steps.tool_for_scanning.outputs.scan_tool == 'trivy'
+    #   uses: aquasecurity/trivy-action@0.29.0
+    #   with:
+    #     image-ref: "ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_tag.outputs.tag }}"
+    #     format: "template"
+    #     template: "@$HOME/.local/bin/trivy-bin/contrib/html.tpl"
+    #     output: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.html"
+    #     # severity: 'CRITICAL,HIGH'
+    #     # exit-code: ${{ steps.exit_code_env_trivy.outputs.exit_code_env_trivy }}
+    #     skip-setup-trivy: true
+    # - name: Upload Trivy (HTML report)
+    #   if: steps.tool_for_scanning.outputs.scan_tool == 'trivy'
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-html
+    #     path: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.html
+    #     retention-days: 1
+    # - name: Run Grype (JSON report)
+    #   if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
+    #   uses: anchore/scan-action@v6
+    #   with:
+    #     image: "ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_tag.outputs.tag }}"
+    #     output-format: "json"
+    #     output-file: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json"
+    #     fail-build: "false"
+    # - name: Upload Grype (JSON report)
+    #   if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-json
+    #     path: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json
+    #     retention-days: 1
+    # - name: Run Grype (Text report)
+    #   if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
+    #   uses: anchore/scan-action@v6
+    #   with:
+    #     image: "ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_tag.outputs.tag }}"
+    #     output-format: "table"
+    #     output-file: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.txt"
+    #     # severity-cutoff: high
+    #     # fail-build: ${{ steps.exit_code_env_grype.outputs.exit_code_env_grype }}
+    #     fail-build: "false"
+    # - name: Upload Grype (Text report)
+    #   if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-txt
+    #     path: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.txt
+    #     retention-days: 1
