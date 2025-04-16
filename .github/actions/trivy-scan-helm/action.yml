@@ -15,9 +15,7 @@ runs:
     - name: Helm fetch
       shell: bash
       run: |
-        helm registry login ghcr.io/jjoinvest/jjo-helm-charts -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
-        helm fetch oci://ghcr.io/jjoinvest/jjo-helm-charts/${{ inputs.CHART_NAME }} --version ${{ inputs.CHART_VER }} --untar
-        ls -la
+        echo "Here will be Trivy"
 
     # - name: Run Trivy (JSON report)
     #   uses: aquasecurity/trivy-action@0.29.0
