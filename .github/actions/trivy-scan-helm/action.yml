@@ -54,7 +54,6 @@ runs:
         output: "${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.html"
         skip-setup-trivy: true
     - name: Upload Trivy (HTML report)
-      if: steps.tool_for_scanning.outputs.scan_tool == 'trivy'
       uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}-html
