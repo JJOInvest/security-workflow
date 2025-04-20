@@ -52,6 +52,7 @@ runs:
           echo "For this repo image scan is not required!"
           echo "If you want to scan image from this repo, please add it in the appropriate file:"
           echo "https://github.com/JJOInvest/security-workflow/tree/main"
+          exit 1
         fi
       id: tool_for_scanning
     - name: Extract tag name
