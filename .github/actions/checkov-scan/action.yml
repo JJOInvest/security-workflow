@@ -1,0 +1,16 @@
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: Run Checkov 
+      id: checkov
+      uses: bridgecrewio/checkov-action@master
+      with:
+        quiet: true
+        soft_fail: true
+        framework: terraform
+        output_format: cli,json
+        output_file_path: console,${{ github.event.repository.name }}-${{ GITHUB_REF_NAME }}-checkov.json
+        download_external_modules: true
