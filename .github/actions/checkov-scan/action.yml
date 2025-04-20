@@ -10,7 +10,8 @@ runs:
       with:
         quiet: false
         soft_fail: true
-        # framework: terraform
+        framework: terraform
+        log_level: DEBUG
         output_format: cli #,json
         output_file_path: console #,${{ github.event.repository.name }}-${{ env.GITHUB_REF_NAME }}-checkov.json
         download_external_modules: true
