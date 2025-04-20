@@ -15,3 +15,7 @@ runs:
         output_format: cli #,json
         output_file_path: console #,${{ github.event.repository.name }}-${{ env.GITHUB_REF_NAME }}-checkov.json
         download_external_modules: true
+    - name: Test
+      shell: bash
+      run: |
+        cat console/results_cli.txt
