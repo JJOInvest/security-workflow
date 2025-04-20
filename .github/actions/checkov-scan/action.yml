@@ -12,11 +12,11 @@ runs:
         soft_fail: true
         framework: terraform
         output_format: cli,json
-        output_file_path: console,reports/${{ github.event.repository.name }}-checkov.json
+        output_file_path: console,reports/checkov-${{ github.event.repository.name }}-security.json
         download_external_modules: true
     - name: Upload Checkov (JSON report)
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ github.event.repository.name }}-checkov-json
-        path: reports/${{ github.event.repository.name }}-checkov.json
+        name: checkov-${{ github.event.repository.name }}-security-json
+        path: reports/checkov-${{ github.event.repository.name }}-security.json
         retention-days: 1
