@@ -11,11 +11,12 @@ runs:
         quiet: false
         soft_fail: true
         framework: terraform
-        log_level: DEBUG
-        output_format: cli #,json
-        output_file_path: console #,${{ github.event.repository.name }}-${{ env.GITHUB_REF_NAME }}-checkov.json
+        output_format: cli,json
+        output_file_path: console,reports/${{ github.event.repository.name }}-${{ env.GITHUB_REF_NAME }}-checkov.json
         download_external_modules: true
-    - name: Test
-      shell: bash
-      run: |
-        cat console/results_cli.txt
+    - name: Upload Checkov (JSON report)
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ github.event.repository.name }}-${{ env.GITHUB_REF_NAME }}-checkov-json
+        path: reports/${{ github.event.repository.name }}-${{ env.GITHUB_REF_NAME }}-checkov.json
+        retention-days: 1
