@@ -17,6 +17,6 @@ runs:
     - name: Upload Checkov (JSON report)
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ github.event.repository.name }}-${{ env.GITHUB_REF_NAME }}-checkov-json
-        path: reports/${{ github.event.repository.name }}-${{ env.GITHUB_REF_NAME }}-checkov.json
+        name: ${{ github.event.repository.name }}-checkov-json
+        path: reports/${{ github.event.repository.name }}-checkov.json
         retention-days: 1
