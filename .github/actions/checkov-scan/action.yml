@@ -12,5 +12,5 @@ runs:
         soft_fail: true
         framework: terraform
         output_format: cli,json
-        output_file_path: console,${{ github.event.repository.name }}-${{ GITHUB_REF_NAME }}-checkov.json
+        output_file_path: console,${{ github.event.repository.name }}-${{ env.GITHUB_REF_NAME }}-checkov.json
         download_external_modules: true
