@@ -122,15 +122,15 @@ runs:
       with:
         image-ref: "ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_tag.outputs.tag }}"
         format: "json"
-        output: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json"
+        output: "image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json"
         exit-code: 0
     
     - name: Upload Trivy (JSON report)
       if: steps.tool_for_scanning.outputs.scan_tool == 'trivy'
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-json
-        path: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json
+        name: image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-json
+        path: image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json
         retention-days: 1
 
     - name: Run Trivy (HTML report)
@@ -140,7 +140,7 @@ runs:
         image-ref: "ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_tag.outputs.tag }}"
         format: "template"
         template: "@$HOME/.local/bin/trivy-bin/contrib/html.tpl"
-        output: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.html"
+        output: "image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.html"
         # severity: 'CRITICAL,HIGH'
         # exit-code: ${{ steps.exit_code_env_trivy.outputs.exit_code_env_trivy }}
         skip-setup-trivy: true
@@ -149,8 +149,8 @@ runs:
       if: steps.tool_for_scanning.outputs.scan_tool == 'trivy'
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-html
-        path: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.html
+        name: image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-html
+        path: image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.html
         retention-days: 1
 
     - name: Login to GitHub Container Registry

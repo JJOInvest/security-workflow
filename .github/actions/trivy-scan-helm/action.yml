@@ -70,14 +70,14 @@ runs:
         hide-progress: true
         format: "json"
         scan-ref: "${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.yaml"
-        output: "${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.json"
+        output: "helm-${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.json"
         exit-code: 0
     
     - name: Upload Trivy (JSON report)
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}-json
-        path: ${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.json
+        name: helm-${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}-json
+        path: helm-${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.json
         retention-days: 1
     
     - name: Run Trivy (HTML report)
@@ -88,7 +88,7 @@ runs:
         format: "template"
         scan-ref: "${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.yaml"
         template: "@$HOME/.local/bin/trivy-bin/contrib/html.tpl"
-        output: "${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.html"
+        output: "helm-${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.html"
         # severity: 'CRITICAL,HIGH'
         # exit-code: ${{ steps.exit_code_env_trivy.outputs.exit_code_env_trivy }}
         skip-setup-trivy: true
@@ -96,8 +96,8 @@ runs:
     - name: Upload Trivy (HTML report)
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}-html
-        path: ${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.html
+        name: helm-${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}-html
+        path: helm-${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.html
         retention-days: 1
 
     - name: Login to GitHub Container Registry
@@ -122,7 +122,7 @@ runs:
         DD_ENGAGEMENT_NAME: ${{ github.head_ref || github.ref_name }}
         DD_TEST_NAME: Helm scanning
         DD_TEST_TYPE_NAME: Trivy Scan
-        DD_FILE_NAME: ./results/${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.json
+        DD_FILE_NAME: ./results/helm-${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.json
         DD_EXTRA_HEADER_1: CF-Access-Client-Id
         DD_EXTRA_HEADER_1_VALUE: ${{ inputs.CF_ACCESS_CLIENT_ID }}
         DD_EXTRA_HEADER_2: CF-Access-Client-Secret
