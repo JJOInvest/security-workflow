@@ -1,17 +1,17 @@
 inputs:
-  defectdojo-url:
+  DEFECTDOJO_URL:
     required: true
     description: 'DefectDojo URL'
-  defectdojo-token:
+  DEFECTDOJO_TOKEN:
     required: true
     description: 'DefectDojo API Key'
-  cf-access-client-id:
+  CF_ACCESS_CLIENT_ID:
     required: true
     description: 'CF access client id'
-  cf-access-client-secret:
+  CF_ACCESS_CLIENT_SECRET:
     required: true
     description: 'CF access client secret'
-  github-token:
+  GH_TOKEN:
     required: true
     description: 'GitHub token for ghcr login'
 
@@ -61,7 +61,7 @@ runs:
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
-        password: ${{ inputs.github-token }}
+        password: ${{ inputs.GH_TOKEN }}
 
     - name: Pull dd-import image
       shell: bash
@@ -71,18 +71,18 @@ runs:
     - name: Upload Semgrep Report to DefectDojo
       shell: bash
       env:
-        DD_URL: ${{ inputs.defectdojo-url }}
-        DD_API_KEY: ${{ inputs.defectdojo-token }}
+        DD_URL: ${{ inputs.DEFECTDOJO_URL }}
+        DD_API_KEY: ${{ inputs.DEFECTDOJO_TOKEN }}
         DD_PRODUCT_TYPE_NAME: JJO
         DD_PRODUCT_NAME: ${{ github.event.repository.name }}
         DD_ENGAGEMENT_NAME: ${{ github.head_ref || github.ref_name }}
         DD_TEST_NAME: SAST (Semgrep)
         DD_TEST_TYPE_NAME: Semgrep JSON Report
         DD_FILE_NAME: ./results/semgrep-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}.json
-        DD_EXTRA_HEADER_1: CF-Access-Client-Id
-        DD_EXTRA_HEADER_1_VALUE: ${{ inputs.cf-access-client-id }}
-        DD_EXTRA_HEADER_2: CF-Access-Client-Secret
-        DD_EXTRA_HEADER_2_VALUE: ${{ inputs.cf-access-client-secret }}
+        DD_EXTRA_HEADER_1: CF_ACCESS_CLIENT_ID
+        DD_EXTRA_HEADER_1_VALUE: ${{ inputs.CF_ACCESS_CLIENT_ID }}
+        DD_EXTRA_HEADER_2: CF_ACCESS_CLIENT_SECRET
+        DD_EXTRA_HEADER_2_VALUE: ${{ inputs.CF_ACCESS_CLIENT_SECRET }}
       run: |
         docker run --rm \
         -e DD_URL \
@@ -105,17 +105,17 @@ runs:
       continue-on-error: ${{ !(github.ref_type == 'tag' || github.ref == 'refs/heads/main') }}
       shell: bash
       env:
-        DD_URL: ${{ inputs.defectdojo-url }}
-        DD_API_KEY: ${{ inputs.defectdojo-token }}
+        DD_URL: ${{ inputs.DEFECTDOJO_URL }}
+        DD_API_KEY: ${{ inputs.DEFECTDOJO_TOKEN }}
         DD_PRODUCT_TYPE_NAME: JJO
         DD_PRODUCT_NAME: ${{ github.event.repository.name }}
         DD_ENGAGEMENT_NAME: ${{ github.head_ref || github.ref_name }}
         DD_TEST_NAME: SAST (Semgrep)
         DD_TEST_TYPE_NAME: Semgrep JSON Report
-        DD_EXTRA_HEADER_1: CF-Access-Client-Id
-        DD_EXTRA_HEADER_1_VALUE: ${{ inputs.cf-access-client-id }}
-        DD_EXTRA_HEADER_2: CF-Access-Client-Secret
-        DD_EXTRA_HEADER_2_VALUE: ${{ inputs.cf-access-client-secret }}
+        DD_EXTRA_HEADER_1: CF_ACCESS_CLIENT_ID
+        DD_EXTRA_HEADER_1_VALUE: ${{ inputs.CF_ACCESS_CLIENT_ID }}
+        DD_EXTRA_HEADER_2: CF_ACCESS_CLIENT_SECRET
+        DD_EXTRA_HEADER_2_VALUE: ${{ inputs.CF_ACCESS_CLIENT_SECRET }}
         #Значения QG - выставляем самостоятельно для каждой практики
         TOTAL_THRESHOLD: 100
         CRITICAL_THRESHOLD: 1
