@@ -132,7 +132,27 @@ runs:
         name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-json
         path: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json
         retention-days: 1
+
+    - name: Run Trivy (HTML report)
+      if: steps.tool_for_scanning.outputs.scan_tool == 'trivy'
+      uses: aquasecurity/trivy-action@0.29.0
+      with:
+        image-ref: "ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_tag.outputs.tag }}"
+        format: "template"
+        template: "@$HOME/.local/bin/trivy-bin/contrib/html.tpl"
+        output: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.html"
+        # severity: 'CRITICAL,HIGH'
+        # exit-code: ${{ steps.exit_code_env_trivy.outputs.exit_code_env_trivy }}
+        skip-setup-trivy: true
     
+    - name: Upload Trivy (HTML report)
+      if: steps.tool_for_scanning.outputs.scan_tool == 'trivy'
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-html
+        path: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.html
+        retention-days: 1
+
     - name: Upload Trivy Report to DefectDojo
       if: steps.tool_for_scanning.outputs.scan_tool == 'trivy'
       shell: bash
@@ -211,26 +231,6 @@ runs:
         -e INFO_THRESHOLD \
         -v $(pwd):/usr/local/dd-import/results \
         ghcr.io/jjoinvest/dd-import-qg:latest dd-check-thresholds.sh
-
-    - name: Run Trivy (HTML report)
-      if: steps.tool_for_scanning.outputs.scan_tool == 'trivy'
-      uses: aquasecurity/trivy-action@0.29.0
-      with:
-        image-ref: "ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_tag.outputs.tag }}"
-        format: "template"
-        template: "@$HOME/.local/bin/trivy-bin/contrib/html.tpl"
-        output: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.html"
-        # severity: 'CRITICAL,HIGH'
-        # exit-code: ${{ steps.exit_code_env_trivy.outputs.exit_code_env_trivy }}
-        skip-setup-trivy: true
-    
-    - name: Upload Trivy (HTML report)
-      if: steps.tool_for_scanning.outputs.scan_tool == 'trivy'
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-html
-        path: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.html
-        retention-days: 1
     
     - name: Run Grype (JSON report)
       if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
@@ -249,6 +249,24 @@ runs:
         path: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json
         retention-days: 1
     
+    - name: Run Grype (Text report)
+      if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
+      uses: anchore/scan-action@v6
+      with:
+        image: "ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_tag.outputs.tag }}"
+        output-format: "table"
+        output-file: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.txt"
+        # severity-cutoff: high
+        # fail-build: ${{ steps.exit_code_env_grype.outputs.exit_code_env_grype }}
+        fail-build: "false"
+    - name: Upload Grype (Text report)
+      if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-txt
+        path: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.txt
+        retention-days: 1
+
     - name: Upload Grype JSON Report to DefectDojo
       if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
       shell: bash
@@ -327,21 +345,3 @@ runs:
         -e INFO_THRESHOLD \
         -v $(pwd):/usr/local/dd-import/results \
         ghcr.io/jjoinvest/dd-import-qg:latest dd-check-thresholds.sh
-    
-    - name: Run Grype (Text report)
-      if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
-      uses: anchore/scan-action@v6
-      with:
-        image: "ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_tag.outputs.tag }}"
-        output-format: "table"
-        output-file: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.txt"
-        # severity-cutoff: high
-        # fail-build: ${{ steps.exit_code_env_grype.outputs.exit_code_env_grype }}
-        fail-build: "false"
-    - name: Upload Grype (Text report)
-      if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-txt
-        path: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.txt
-        retention-days: 1
