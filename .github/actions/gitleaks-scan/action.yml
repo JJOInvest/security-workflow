@@ -11,7 +11,7 @@ inputs:
   CF_ACCESS_CLIENT_SECRET:
     required: true
     description: 'CF access client secret'
-  github-token:
+  GH_TOKEN:
     required: true
     description: 'GitHub token for ghcr login'
 
@@ -65,7 +65,7 @@ runs:
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
-        password: ${{ inputs.github-token }}
+        password: ${{ inputs.GH_TOKEN }}
 
     - name: Pull dd-import image
       shell: bash
