@@ -122,15 +122,15 @@ runs:
       with:
         image-ref: "ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_tag.outputs.tag }}"
         format: "json"
-        output: "image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json"
+        output: "trivy-image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json"
         exit-code: 0
     
     - name: Upload Trivy (JSON report)
       if: steps.tool_for_scanning.outputs.scan_tool == 'trivy'
       uses: actions/upload-artifact@v4
       with:
-        name: image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-json
-        path: image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json
+        name: trivy-image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-json
+        path: trivy-image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json
         retention-days: 1
 
     - name: Run Trivy (HTML report)
@@ -140,7 +140,7 @@ runs:
         image-ref: "ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_tag.outputs.tag }}"
         format: "template"
         template: "@$HOME/.local/bin/trivy-bin/contrib/html.tpl"
-        output: "image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.html"
+        output: "trivy-image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.html"
         # severity: 'CRITICAL,HIGH'
         # exit-code: ${{ steps.exit_code_env_trivy.outputs.exit_code_env_trivy }}
         skip-setup-trivy: true
@@ -149,8 +149,8 @@ runs:
       if: steps.tool_for_scanning.outputs.scan_tool == 'trivy'
       uses: actions/upload-artifact@v4
       with:
-        name: image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-html
-        path: image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.html
+        name: trivy-image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-html
+        path: trivy-image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.html
         retention-days: 1
 
     - name: Login to GitHub Container Registry
@@ -174,9 +174,9 @@ runs:
         DD_PRODUCT_TYPE_NAME: JJO
         DD_PRODUCT_NAME: ${{ github.event.repository.name }}
         DD_ENGAGEMENT_NAME: ${{ github.head_ref || github.ref_name }}
-        DD_TEST_NAME: Image scanning
+        DD_TEST_NAME: "${{ inputs.SERVICE_NAME }} Image scanning"
         DD_TEST_TYPE_NAME: Trivy Scan
-        DD_FILE_NAME: ./results/${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json
+        DD_FILE_NAME: ./results/trivy-image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json
         DD_EXTRA_HEADER_1: CF-Access-Client-Id
         DD_EXTRA_HEADER_1_VALUE: ${{ inputs.CF_ACCESS_CLIENT_ID }}
         DD_EXTRA_HEADER_2: CF-Access-Client-Secret
@@ -209,7 +209,7 @@ runs:
         DD_PRODUCT_TYPE_NAME: JJO
         DD_PRODUCT_NAME: ${{ github.event.repository.name }}
         DD_ENGAGEMENT_NAME: ${{ github.head_ref || github.ref_name }}
-        DD_TEST_NAME: Image scanning
+        DD_TEST_NAME: "${{ inputs.SERVICE_NAME }} Image scanning"
         DD_TEST_TYPE_NAME: Trivy Scan
         DD_EXTRA_HEADER_1: CF-Access-Client-Id
         DD_EXTRA_HEADER_1_VALUE: ${{ inputs.CF_ACCESS_CLIENT_ID }}
@@ -250,15 +250,15 @@ runs:
       with:
         image: "ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_tag.outputs.tag }}"
         output-format: "json"
-        output-file: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json"
+        output-file: "grype-image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json"
         fail-build: "false"
     
     - name: Upload Grype (JSON report)
       if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-json
-        path: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json
+        name: grype-image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-json
+        path: grype-image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json
         retention-days: 1
     
     - name: Run Grype (Text report)
@@ -267,7 +267,7 @@ runs:
       with:
         image: "ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_tag.outputs.tag }}"
         output-format: "table"
-        output-file: "${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.txt"
+        output-file: "grype-image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.txt"
         # severity-cutoff: high
         # fail-build: ${{ steps.exit_code_env_grype.outputs.exit_code_env_grype }}
         fail-build: "false"
@@ -275,8 +275,8 @@ runs:
       if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-txt
-        path: ${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.txt
+        name: grype-image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-txt
+        path: grype-image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.txt
         retention-days: 1
 
     - name: Upload Grype JSON Report to DefectDojo
@@ -288,9 +288,9 @@ runs:
         DD_PRODUCT_TYPE_NAME: JJO
         DD_PRODUCT_NAME: ${{ github.event.repository.name }}
         DD_ENGAGEMENT_NAME: ${{ github.head_ref || github.ref_name }}
-        DD_TEST_NAME: Image scanning
+        DD_TEST_NAME: "${{ inputs.SERVICE_NAME }} Image scanning"
         DD_TEST_TYPE_NAME: Anchore Grype
-        DD_FILE_NAME: ./results/${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json
+        DD_FILE_NAME: ./results/grype-image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json
         DD_EXTRA_HEADER_1: CF-Access-Client-Id
         DD_EXTRA_HEADER_1_VALUE: ${{ inputs.CF_ACCESS_CLIENT_ID }}
         DD_EXTRA_HEADER_2: CF-Access-Client-Secret
@@ -323,7 +323,7 @@ runs:
         DD_PRODUCT_TYPE_NAME: JJO
         DD_PRODUCT_NAME: ${{ github.event.repository.name }}
         DD_ENGAGEMENT_NAME: ${{ github.head_ref || github.ref_name }}
-        DD_TEST_NAME: Image scanning
+        DD_TEST_NAME: "${{ inputs.SERVICE_NAME }} Image scanning"
         DD_TEST_TYPE_NAME: Anchore Grype
         DD_EXTRA_HEADER_1: CF-Access-Client-Id
         DD_EXTRA_HEADER_1_VALUE: ${{ inputs.CF_ACCESS_CLIENT_ID }}

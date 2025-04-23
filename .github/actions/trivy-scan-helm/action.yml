@@ -120,7 +120,7 @@ runs:
         DD_PRODUCT_TYPE_NAME: JJO
         DD_PRODUCT_NAME: ${{ github.event.repository.name }}
         DD_ENGAGEMENT_NAME: ${{ github.head_ref || github.ref_name }}
-        DD_TEST_NAME: Helm scanning
+        DD_TEST_NAME: "Helm ${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }} scanning"
         DD_TEST_TYPE_NAME: Trivy Scan
         DD_FILE_NAME: ./results/helm-${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.json
         DD_EXTRA_HEADER_1: CF-Access-Client-Id
@@ -154,7 +154,7 @@ runs:
         DD_PRODUCT_TYPE_NAME: JJO
         DD_PRODUCT_NAME: ${{ github.event.repository.name }}
         DD_ENGAGEMENT_NAME: ${{ github.head_ref || github.ref_name }}
-        DD_TEST_NAME: Image scanning
+        DD_TEST_NAME: "Helm ${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }} scanning"
         DD_TEST_TYPE_NAME: Trivy Scan
         DD_EXTRA_HEADER_1: CF-Access-Client-Id
         DD_EXTRA_HEADER_1_VALUE: ${{ inputs.CF_ACCESS_CLIENT_ID }}
