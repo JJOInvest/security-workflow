@@ -71,9 +71,9 @@ runs:
         DD_TEST_NAME: SCA (Grype scan fs)
         DD_TEST_TYPE_NAME: Anchore Grype
         DD_FILE_NAME: ./results/grype-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}.json
-        DD_EXTRA_HEADER_1: CF_ACCESS_CLIENT_ID
+        DD_EXTRA_HEADER_1: CF-Access-Client-Id
         DD_EXTRA_HEADER_1_VALUE: ${{ inputs.CF_ACCESS_CLIENT_ID }}
-        DD_EXTRA_HEADER_2: CF_ACCESS_CLIENT_SECRET
+        DD_EXTRA_HEADER_2: CF-Access-Client-Secret
         DD_EXTRA_HEADER_2_VALUE: ${{ inputs.CF_ACCESS_CLIENT_SECRET }}
       run: |
         docker run --rm \
@@ -104,9 +104,9 @@ runs:
         DD_ENGAGEMENT_NAME: ${{ github.head_ref || github.ref_name }}
         DD_TEST_NAME: SCA (Grype scan fs)
         DD_TEST_TYPE_NAME: Anchore Grype
-        DD_EXTRA_HEADER_1: CF_ACCESS_CLIENT_ID
+        DD_EXTRA_HEADER_1: CF-Access-Client-Id
         DD_EXTRA_HEADER_1_VALUE: ${{ inputs.CF_ACCESS_CLIENT_ID }}
-        DD_EXTRA_HEADER_2: CF_ACCESS_CLIENT_SECRET
+        DD_EXTRA_HEADER_2: CF-Access-Client-Secret
         DD_EXTRA_HEADER_2_VALUE: ${{ inputs.CF_ACCESS_CLIENT_SECRET }}
         #Значения QG - выставляем самостоятельно для каждой практики
         TOTAL_THRESHOLD: 100
