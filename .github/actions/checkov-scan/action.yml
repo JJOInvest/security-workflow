@@ -63,7 +63,7 @@ runs:
         DD_ENGAGEMENT_NAME: ${{ github.head_ref || github.ref_name }}
         DD_TEST_NAME: IaC scanning
         DD_TEST_TYPE_NAME: Checkov Scan
-        DD_FILE_NAME: ./results/checkov-${{ github.event.repository.name }}-security.json
+        DD_FILE_NAME: ./results/reports/checkov-${{ github.event.repository.name }}-security.json
         DD_EXTRA_HEADER_1: CF-Access-Client-Id
         DD_EXTRA_HEADER_1_VALUE: ${{ inputs.CF_ACCESS_CLIENT_ID }}
         DD_EXTRA_HEADER_2: CF-Access-Client-Secret
