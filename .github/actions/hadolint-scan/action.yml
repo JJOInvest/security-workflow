@@ -59,7 +59,7 @@ runs:
         HIGH_THRESHOLD: 10 #warning level в терминах Hadolint
         MEDIUM_THRESHOLD: 0 #при сканах Hadolint не применимо
         LOW_THRESHOLD: 0 #при сканах Hadolint не применимо
-        INFO_THRESHOLD: 20 #info level в терминах Hadolint
+        INFO_THRESHOLD: 0 #info level в терминах Hadolint
       run: |
         
         # hadolint scan & import
