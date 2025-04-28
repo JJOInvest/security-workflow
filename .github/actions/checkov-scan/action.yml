@@ -1,10 +1,29 @@
+inputs:
+  DEFECTDOJO_URL:
+    required: true
+    description: 'DefectDojo URL'
+  DEFECTDOJO_TOKEN:
+    required: true
+    description: 'DefectDojo API Key'
+  CF_ACCESS_CLIENT_ID:
+    required: true
+    description: 'CF access client id'
+  CF_ACCESS_CLIENT_SECRET:
+    required: true
+    description: 'CF access client secret'
+  GH_TOKEN:
+    required: true
+    description: 'GitHub token for ghcr login'
+
 runs:
   using: 'composite'
   steps:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
+    
     - name: Run Checkov 
+      continue-on-error: true
       id: checkov
       uses: bridgecrewio/checkov-action@master
       with:
@@ -14,9 +33,100 @@ runs:
         output_format: cli,json
         output_file_path: console,reports/checkov-${{ github.event.repository.name }}-security.json
         download_external_modules: true
+    
     - name: Upload Checkov (JSON report)
       uses: actions/upload-artifact@v4
       with:
         name: checkov-${{ github.event.repository.name }}-security-json
         path: reports/checkov-${{ github.event.repository.name }}-security.json
         retention-days: 1
+
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ inputs.GH_TOKEN }}
+
+    - name: Pull dd-import image
+      shell: bash
+      run: |
+        docker pull ghcr.io/jjoinvest/dd-import-qg:latest
+
+    - name: Upload Checkov Report to DefectDojo
+      shell: bash
+      env:
+        DD_URL: ${{ inputs.DEFECTDOJO_URL }}
+        DD_API_KEY: ${{ inputs.DEFECTDOJO_TOKEN }}
+        DD_PRODUCT_TYPE_NAME: JJO
+        DD_PRODUCT_NAME: ${{ github.event.repository.name }}
+        DD_ENGAGEMENT_NAME: ${{ github.head_ref || github.ref_name }}
+        DD_TEST_NAME: IaC scanning
+        DD_TEST_TYPE_NAME: Checkov Scan
+        DD_FILE_NAME: ./results/reports/checkov-${{ github.event.repository.name }}-security.json
+        DD_EXTRA_HEADER_1: CF-Access-Client-Id
+        DD_EXTRA_HEADER_1_VALUE: ${{ inputs.CF_ACCESS_CLIENT_ID }}
+        DD_EXTRA_HEADER_2: CF-Access-Client-Secret
+        DD_EXTRA_HEADER_2_VALUE: ${{ inputs.CF_ACCESS_CLIENT_SECRET }}
+      run: |
+        docker run --rm \
+        -e DD_URL \
+        -e DD_API_KEY \
+        -e DD_PRODUCT_TYPE_NAME \
+        -e DD_PRODUCT_NAME \
+        -e DD_ENGAGEMENT_NAME \
+        -e DD_TEST_NAME \
+        -e DD_TEST_TYPE_NAME \
+        -e DD_FILE_NAME \
+        -e DD_EXTRA_HEADER_1 \
+        -e DD_EXTRA_HEADER_1_VALUE \
+        -e DD_EXTRA_HEADER_2 \
+        -e DD_EXTRA_HEADER_2_VALUE \
+        -v $(pwd):/usr/local/dd-import/results \
+        ghcr.io/jjoinvest/dd-import-qg:latest dd-reimport-findings.sh
+
+    - name: Check Quality Gates
+      #джоба падает при старте по событию тега (актуально для продовых воркфлоу в продуктовых репах) и при пуше в main
+      continue-on-error: ${{ !(github.ref_type == 'tag' || github.ref == 'refs/heads/main') }}
+      shell: bash
+      env:
+        DD_URL: ${{ inputs.DEFECTDOJO_URL }}
+        DD_API_KEY: ${{ inputs.DEFECTDOJO_TOKEN }}
+        DD_PRODUCT_TYPE_NAME: JJO
+        DD_PRODUCT_NAME: ${{ github.event.repository.name }}
+        DD_ENGAGEMENT_NAME: ${{ github.head_ref || github.ref_name }}
+        DD_TEST_NAME: IaC scanning
+        DD_TEST_TYPE_NAME: Checkov Scan
+        DD_EXTRA_HEADER_1: CF-Access-Client-Id
+        DD_EXTRA_HEADER_1_VALUE: ${{ inputs.CF_ACCESS_CLIENT_ID }}
+        DD_EXTRA_HEADER_2: CF-Access-Client-Secret
+        DD_EXTRA_HEADER_2_VALUE: ${{ inputs.CF_ACCESS_CLIENT_SECRET }}
+        #Значения QG - выставляем самостоятельно для каждой практики
+        TOTAL_THRESHOLD: 0 #0 - значит, по данному параметру QG нет
+        CRITICAL_THRESHOLD: 1
+        HIGH_THRESHOLD: 5
+        MEDIUM_THRESHOLD: 30
+        LOW_THRESHOLD: 50 
+        INFO_THRESHOLD: 0 #0 - значит, по данному параметру QG нет
+      run: |
+        docker run --rm \
+        -e DD_URL \
+        -e DD_API_KEY \
+        -e DD_PRODUCT_TYPE_NAME \
+        -e DD_PRODUCT_NAME \
+        -e DD_ENGAGEMENT_NAME \
+        -e DD_TEST_NAME \
+        -e DD_TEST_TYPE_NAME \
+        -e DD_EXTRA_HEADER_1 \
+        -e DD_EXTRA_HEADER_1_VALUE \
+        -e DD_EXTRA_HEADER_2 \
+        -e DD_EXTRA_HEADER_2_VALUE \
+        -e TOTAL_THRESHOLD \
+        -e CRITICAL_THRESHOLD \
+        -e HIGH_THRESHOLD \
+        -e MEDIUM_THRESHOLD \
+        -e LOW_THRESHOLD \
+        -e INFO_THRESHOLD \
+        -v $(pwd):/usr/local/dd-import/results \
+        ghcr.io/jjoinvest/dd-import-qg:latest dd-check-thresholds.sh
+

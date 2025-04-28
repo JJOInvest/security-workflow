@@ -1,11 +1,72 @@
+inputs:
+  DEFECTDOJO_URL:
+    required: true
+    description: 'DefectDojo URL'
+  DEFECTDOJO_TOKEN:
+    required: true
+    description: 'DefectDojo API Key'
+  CF_ACCESS_CLIENT_ID:
+    required: true
+    description: 'CF access client id'
+  CF_ACCESS_CLIENT_SECRET:
+    required: true
+    description: 'CF access client secret'
+  GH_TOKEN:
+    required: true
+    description: 'GitHub token for ghcr login'
+
 runs:
   using: 'composite'
   steps:
     - name: Checkout
       uses: actions/checkout@v4
-    - name: Run Hadolint (JSON report)
+    
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ inputs.GH_TOKEN }}
+    
+    - name: Pull Hadolint image
       shell: bash
       run: |
+        docker pull hadolint/hadolint
+
+    - name: Pull dd-import image
+      shell: bash
+      run: |
+        docker pull ghcr.io/jjoinvest/dd-import-qg:latest
+
+    - name: Run Hadolint (JSON report) and upload to DefectDojo
+      id: scan
+      continue-on-error: true
+      shell: bash
+      env:
+        DD_URL: ${{ inputs.DEFECTDOJO_URL }}
+        DD_API_KEY: ${{ inputs.DEFECTDOJO_TOKEN }}
+        DD_PRODUCT_TYPE_NAME: JJO
+        DD_PRODUCT_NAME: ${{ github.event.repository.name }}
+        DD_ENGAGEMENT_NAME: ${{ github.head_ref || github.ref_name }}
+        DD_TEST_TYPE_NAME: Hadolint Dockerfile check
+        DD_EXTRA_HEADER_1: CF-Access-Client-Id
+        DD_EXTRA_HEADER_1_VALUE: ${{ inputs.CF_ACCESS_CLIENT_ID }}
+        DD_EXTRA_HEADER_2: CF-Access-Client-Secret
+        DD_EXTRA_HEADER_2_VALUE: ${{ inputs.CF_ACCESS_CLIENT_SECRET }}
+        #Значения QG - выставляем самостоятельно для каждой практики
+        TOTAL_THRESHOLD: 0 #0 - значит, по данному параметру QG нет
+        CRITICAL_THRESHOLD: 1 #error level в терминах Hadolint
+        HIGH_THRESHOLD: 10 #warning level в терминах Hadolint
+        MEDIUM_THRESHOLD: 0 #при сканах Hadolint не применимо
+        LOW_THRESHOLD: 0 #при сканах Hadolint не применимо
+        INFO_THRESHOLD: 0 #info level в терминах Hadolint
+      run: |
+        
+        # hadolint scan & import
+
+        # создаём пустой файл с exit кодами
+        : > exit_codes.txt
+
         echo "Finding Dockerfiles..."
         mapfile -t files < <(find $GITHUB_WORKSPACE -type f \( -iname "dockerfile*" -o -iname "*dockerfile*" \) -not -path "*/.git/*" | sort)
         if [ ${#files[@]} -eq 0 ]; then
@@ -14,7 +75,7 @@ runs:
         fi
 
         for file in "${files[@]}"; do
-          trimmed_path="${file#/home/runner/work/}"
+          trimmed_path="${file#/home/runner/work/*/}"
           
           echo "Scanning: $trimmed_path"
           
@@ -23,15 +84,104 @@ runs:
 
           docker run --rm -i --entrypoint /bin/hadolint \
             hadolint/hadolint --no-fail -f json - < "$file" | \
-            jq --arg file "$trimmed_path" '.[].file = $file' > "$report_name"          
+            jq --arg file "$trimmed_path" '.[].file = $file' > "$report_name" \
+            || hadolint_exit=$?
+          echo "HADOLINT:$hadolint_exit" >> exit_codes.txt
 
           echo "Saved report to $report_name"
+
+          short_name=$(echo "$report_name" | sed 's/.*-v2-//; s/-hadolint$//')
+          
+          echo "########IMPORT $short_name TO DEFECTDOJO########"
+          docker run --rm \
+            -e DD_URL \
+            -e DD_API_KEY \
+            -e DD_PRODUCT_TYPE_NAME \
+            -e DD_PRODUCT_NAME \
+            -e DD_ENGAGEMENT_NAME \
+            -e DD_TEST_NAME="$short_name Scan" \
+            -e DD_TEST_TYPE_NAME \
+            -e DD_FILE_NAME=./results/$report_name \
+            -e DD_EXTRA_HEADER_1 \
+            -e DD_EXTRA_HEADER_1_VALUE \
+            -e DD_EXTRA_HEADER_2 \
+            -e DD_EXTRA_HEADER_2_VALUE \
+            -v $(pwd):/usr/local/dd-import/results \
+            ghcr.io/jjoinvest/dd-import-qg:latest dd-reimport-findings.sh \
+            || import_exit=$?
+          echo "IMPORT:$import_exit" >> exit_codes.txt
+
+          echo "########RUN QG FOR $short_name########"
+          docker run --rm \
+            -e DD_URL \
+            -e DD_API_KEY \
+            -e DD_PRODUCT_TYPE_NAME \
+            -e DD_PRODUCT_NAME \
+            -e DD_ENGAGEMENT_NAME \
+            -e DD_TEST_NAME="$short_name Scan" \
+            -e DD_TEST_TYPE_NAME \
+            -e DD_EXTRA_HEADER_1 \
+            -e DD_EXTRA_HEADER_1_VALUE \
+            -e DD_EXTRA_HEADER_2 \
+            -e DD_EXTRA_HEADER_2_VALUE \
+            -e TOTAL_THRESHOLD \
+            -e CRITICAL_THRESHOLD \
+            -e HIGH_THRESHOLD \
+            -e MEDIUM_THRESHOLD \
+            -e LOW_THRESHOLD \
+            -e INFO_THRESHOLD \
+            -v $(pwd):/usr/local/dd-import/results \
+            ghcr.io/jjoinvest/dd-import-qg:latest dd-check-thresholds.sh \
+            || qg_exit=$?
+          echo "QG:$qg_exit" >> exit_codes.txt
         done
-    - name: Upload Hadolint (JSON report)
-      uses: actions/upload-artifact@v4
-      with:
-        name: hadolint-reports-json
-        path: '*-hadolint.json'
+
+        # Сохраняем содержимое файла в output
+        echo "exit_codes<<EOF" >> $GITHUB_OUTPUT
+        cat exit_codes.txt >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+        
+        # Проверяем, что файл содержит данные (debug)
+        # echo "=== Saved exit codes ==="
+        # cat exit_codes.txt
+
+    - name: Analyze results
+      id: analyze
+      shell: bash
+      run: |
+        # Читаем сохранённые коды
+        echo "${{ steps.scan.outputs.exit_codes }}" > exit_codes.txt
+        
+        # Проверяем, что файл содержит данные (debug)
+        # echo "=== Loaded exit codes ==="
+        # cat exit_codes.txt
+        
+        # Анализ кодов ошибок
+        has_qg_failure=0
+        has_other_error=0
+        
+        while IFS=: read -r operation code || [ -n "$operation" ]; do
+          code="${code//[^0-9]/}"  # Оставляем только цифры
+          
+          if [[ "$operation" == "QG" && "$code" -eq 2 ]]; then
+            has_qg_failure=1
+          elif [[ "$code" -ne 0 ]]; then
+            has_other_error=1
+          fi
+        done < exit_codes.txt
+        
+        # Устанавливаем результаты
+        if [[ "$has_other_error" -eq 1 ]]; then
+          echo "message=‼️‼️‼️ SCAN FAILED ‼️‼️‼️" >> $GITHUB_OUTPUT
+          echo "exit_code=1" >> $GITHUB_OUTPUT
+        elif [[ "$has_qg_failure" -eq 1 ]]; then
+          echo "message=‼️‼️‼️ QUALITY GATES CHECK FAILED ‼️‼️‼️" >> $GITHUB_OUTPUT
+          echo "exit_code=2" >> $GITHUB_OUTPUT
+        else
+          echo "message=✅✅✅ QUALITY GATES CHECK PASSED ✅✅✅" >> $GITHUB_OUTPUT
+          echo "exit_code=0" >> $GITHUB_OUTPUT
+        fi
+
     - name: Clean runner for next scan
       shell: bash
       run: |
@@ -40,6 +190,7 @@ runs:
         else
           echo "No Dockerfiles were found. Skipping..."
         fi
+    
     - name: Run Hadolint (Text report)
       shell: bash
       run: |
@@ -51,7 +202,7 @@ runs:
         fi
 
         for file in "${files[@]}"; do
-          trimmed_path="${file#/home/runner/work/}"
+          trimmed_path="${file#/home/runner/work/*/}"
           
           echo "Scanning: $trimmed_path"
           
@@ -66,8 +217,17 @@ runs:
           cat "$report_name"
           echo "========================================================="
         done
+    
     - name: Upload Hadolint (Text report)
       uses: actions/upload-artifact@v4
       with:
         name: hadolint-reports-txt
         path: '*-hadolint.txt'
+
+    - name: Display result
+      #джоба падает при старте по событию тега (актуально для продовых воркфлоу в продуктовых репах) и при пуше в main
+      continue-on-error: ${{ !(github.ref_type == 'tag' || github.ref == 'refs/heads/main') }}
+      shell: bash
+      run: |
+        echo "${{ steps.analyze.outputs.message }}"
+        exit ${{ steps.analyze.outputs.exit_code }}
