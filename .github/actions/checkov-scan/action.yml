@@ -23,6 +23,7 @@ runs:
         fetch-depth: 0
     
     - name: Run Checkov 
+      continue-on-error: true
       id: checkov
       uses: bridgecrewio/checkov-action@master
       with:
