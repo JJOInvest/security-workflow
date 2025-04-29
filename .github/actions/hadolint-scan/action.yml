@@ -92,13 +92,13 @@ runs:
 
           short_name=$(echo "$report_name" | sed 's/.*-v2-//; s/-hadolint$//')
           
-          if ${{ github.event.repository.name }}=="jjo-invest-backend-v2"
-            then
-              sleep(3)
+          if [ "${{ github.event.repository.name }}" == "jjo-invest-backend-v2" ]
+          then
+              sleep 3
               echo "########IMPORT $short_name TO DEFECTDOJO########"
           else
-            echo "########IMPORT $short_name TO DEFECTDOJO########"
-          fi          
+              echo "########IMPORT $short_name TO DEFECTDOJO########"
+          fi        
           
           docker run --rm \
             -e DD_URL \
@@ -118,13 +118,13 @@ runs:
             || import_exit=$?
           echo "IMPORT:$import_exit" >> exit_codes.txt
 
-          if ${{ github.event.repository.name }}=="jjo-invest-backend-v2"
-            then
-              sleep(3)
+          if [ "${{ github.event.repository.name }}" == "jjo-invest-backend-v2" ]
+          then
+              sleep 3
               echo "########RUN QG FOR $short_name########"
           else
-            echo "########RUN QG FOR $short_name########"
-          fi
+              echo "########RUN QG FOR $short_name########"
+          fi          
                     
           docker run --rm \
             -e DD_URL \

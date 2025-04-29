@@ -144,13 +144,13 @@ runs:
         DD_EXTRA_HEADER_2: CF-Access-Client-Secret
         DD_EXTRA_HEADER_2_VALUE: ${{ inputs.CF_ACCESS_CLIENT_SECRET }}
       run: |
-        if ${{ github.event.repository.name }}=="jjo-invest-backend-v2"
-          then
-            sleep(3)
-            echo "Start Import in DefectDojo"
+        if [ "${{ github.event.repository.name }}" == "jjo-invest-backend-v2" ]
+        then
+            echo "Sleep & Start Import in DefectDojo"
+            sleep 3
         else
-          echo "Start Import in DefectDojo"
-        fi  
+            echo "Start Import in DefectDojo"
+        fi    
         
         docker run --rm \
         -e DD_URL \
@@ -193,13 +193,13 @@ runs:
         LOW_THRESHOLD: 0 #0 - значит, по данному параметру QG нет
         INFO_THRESHOLD: 0 #0 - значит, по данному параметру QG нет
       run: |
-        if ${{ github.event.repository.name }}=="jjo-invest-backend-v2"
-          then
-            sleep(3)
-            echo "Start checking QG"
+        if [ "${{ github.event.repository.name }}" == "jjo-invest-backend-v2" ]
+        then
+            echo "Sleep & Start checking QG"
+            sleep 3
         else
-          echo "Start checking QG"
-        fi
+            echo "Start checking QG"
+        fi  
 
         docker run --rm \
         -e DD_URL \
@@ -274,13 +274,13 @@ runs:
         DD_EXTRA_HEADER_2: CF-Access-Client-Secret
         DD_EXTRA_HEADER_2_VALUE: ${{ inputs.CF_ACCESS_CLIENT_SECRET }}
       run: |        
-        if ${{ github.event.repository.name }}=="jjo-invest-backend-v2"
-          then
-            sleep(3)
-            echo "Start Import in DefectDojo"
+        if [ "${{ github.event.repository.name }}" == "jjo-invest-backend-v2" ]
+        then
+            echo "Sleep & Start Import in DefectDojo"
+            sleep 3
         else
-          echo "Start Import in DefectDojo"
-        fi    
+            echo "Start Import in DefectDojo"
+        fi        
         
         docker run --rm \
         -e DD_URL \
@@ -323,13 +323,13 @@ runs:
         LOW_THRESHOLD: 50 
         INFO_THRESHOLD: 0 #0 - значит, по данному параметру QG нет
       run: |
-        if ${{ github.event.repository.name }}=="jjo-invest-backend-v2"
-          then
-            sleep(3)
-            echo "Start checking QG"
+        if [ "${{ github.event.repository.name }}" == "jjo-invest-backend-v2" ]
+        then
+            echo "Sleep & Start checking QG"
+            sleep 3
         else
-          echo "Start checking QG"
-        fi
+            echo "Start checking QG"
+        fi  
 
         docker run --rm \
         -e DD_URL \
