@@ -38,6 +38,7 @@ runs:
           git --log-opts "-1" \
           -f json \
           -r "gitleaks-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}.json" \
+          --exit-code 2 \
           || SECRET_EXIT_CODE=$?
 
         if [ -z $SECRET_EXIT_CODE ]
