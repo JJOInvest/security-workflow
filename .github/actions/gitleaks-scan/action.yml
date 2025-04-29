@@ -43,14 +43,14 @@ runs:
 
         if [ -z $SECRET_EXIT_CODE ]
           then
-            echo "Secrets has not been found"
+            echo "✅ Secrets has not been found ✅"
           exit 0
         elif [ $SECRET_EXIT_CODE = "2" ]
         then
-          echo "########Secrets encountered########"
+          echo "‼️‼️‼️ Secrets encountered ‼️‼️‼️"
           exit 2
         else
-          echo "Error has been occured"
+          echo "‼️‼️‼️ Error has been occured ‼️‼️‼️"
           exit 1
         fi
     
