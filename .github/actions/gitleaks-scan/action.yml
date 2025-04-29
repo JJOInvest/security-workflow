@@ -38,18 +38,20 @@ runs:
           git --log-opts "-1" \
           -f json \
           -r "gitleaks-${{ github.event.repository.name }}-${{ github.head_ref || github.ref_name }}.json" \
+          --exit-code 2 \
           || SECRET_EXIT_CODE=$?
 
         if [ -z $SECRET_EXIT_CODE ]
           then
-            echo "Secrets has not been found"
+            echo "✅ Secrets has not been found ✅"
           exit 0
-        elif [ $SECRET_EXIT_CODE = "1" ]
+        elif [ $SECRET_EXIT_CODE = "2" ]
         then
-          echo "########Secrets or error encountered########"
-          exit 1
+          echo "‼️‼️‼️ Secrets encountered ‼️‼️‼️"
+          exit 2
         else
-          echo "Error has been occured"
+          echo "‼️‼️‼️ Error has been occured ‼️‼️‼️"
+          exit 1
         fi
     
     - name: Upload gitleaks report to artifacts
