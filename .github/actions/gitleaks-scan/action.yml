@@ -45,12 +45,13 @@ runs:
           then
             echo "Secrets has not been found"
           exit 0
-        elif [ $SECRET_EXIT_CODE = "1" ]
+        elif [ $SECRET_EXIT_CODE = "2" ]
         then
-          echo "########Secrets or error encountered########"
-          exit 1
+          echo "########Secrets encountered########"
+          exit 2
         else
           echo "Error has been occured"
+          exit 1
         fi
     
     - name: Upload gitleaks report to artifacts
