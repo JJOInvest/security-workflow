@@ -125,7 +125,7 @@ runs:
     - name: Pull dd-import image
       shell: bash
       run: |
-        docker pull ghcr\.io/jjoinvest/dd-import-qg:bad-gateway-fix
+        docker pull ghcr\.io/jjoinvest/dd-import-qg:v2.0
 
     - name: Upload Trivy Report to DefectDojo
       if: steps.tool_for_scanning.outputs.scan_tool == 'trivy'
@@ -158,7 +158,7 @@ runs:
         -e DD_EXTRA_HEADER_2 \
         -e DD_EXTRA_HEADER_2_VALUE \
         -v $(pwd):/usr/local/dd-import/results \
-        ghcr\.io/jjoinvest/dd-import-qg:bad-gateway-fix dd-reimport-findings.sh
+        ghcr\.io/jjoinvest/dd-import-qg:v2.0 dd-reimport-findings.sh
 
     - name: Check Quality Gates
       #джоба падает при старте по событию тега (актуально для продовых воркфлоу в продуктовых репах) и при пуше в main
@@ -204,7 +204,7 @@ runs:
         -e LOW_THRESHOLD \
         -e INFO_THRESHOLD \
         -v $(pwd):/usr/local/dd-import/results \
-        ghcr\.io/jjoinvest/dd-import-qg:bad-gateway-fix dd-check-thresholds.sh
+        ghcr\.io/jjoinvest/dd-import-qg:v2.0 dd-check-thresholds.sh
     
     - name: Run Grype (JSON report)
       if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
@@ -272,7 +272,7 @@ runs:
         -e DD_EXTRA_HEADER_2 \
         -e DD_EXTRA_HEADER_2_VALUE \
         -v $(pwd):/usr/local/dd-import/results \
-        ghcr\.io/jjoinvest/dd-import-qg:bad-gateway-fix dd-reimport-findings.sh
+        ghcr\.io/jjoinvest/dd-import-qg:v2.0 dd-reimport-findings.sh
 
     - name: Check Quality Gates
       if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
@@ -318,4 +318,4 @@ runs:
         -e LOW_THRESHOLD \
         -e INFO_THRESHOLD \
         -v $(pwd):/usr/local/dd-import/results \
-        ghcr\.io/jjoinvest/dd-import-qg:bad-gateway-fix dd-check-thresholds.sh
+        ghcr\.io/jjoinvest/dd-import-qg:v2.0 dd-check-thresholds.sh
