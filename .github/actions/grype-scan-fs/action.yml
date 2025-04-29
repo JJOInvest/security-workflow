@@ -94,7 +94,7 @@ runs:
 
     - name: Check Quality Gates
       #джоба падает при старте по событию тега (актуально для продовых воркфлоу в продуктовых репах) и при пуше в main
-      continue-on-error: ${{ !(github.ref_type == 'tag' || github.ref == 'refs/heads/main') }}
+      continue-on-error: ${{ !(github.ref_type == 'tag' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') }}
       shell: bash
       env:
         DD_URL: ${{ inputs.DEFECTDOJO_URL }}

@@ -163,7 +163,7 @@ runs:
     - name: Check Quality Gates
       #джоба падает при старте по событию тега (актуально для продовых воркфлоу в продуктовых репах) и при пуше в main
       if: steps.tool_for_scanning.outputs.scan_tool == 'trivy'
-      continue-on-error: ${{ !(github.ref_type == 'tag' || github.ref == 'refs/heads/main') }}
+      continue-on-error: ${{ !(github.ref_type == 'tag' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') }}
       shell: bash
       env:
         DD_URL: ${{ inputs.DEFECTDOJO_URL }}
@@ -277,7 +277,7 @@ runs:
     - name: Check Quality Gates
       if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
       #джоба падает при старте по событию тега (актуально для продовых воркфлоу в продуктовых репах) и при пуше в main
-      continue-on-error: ${{ !(github.ref_type == 'tag' || github.ref == 'refs/heads/main') }}
+      continue-on-error: ${{ !(github.ref_type == 'tag' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') }}
       shell: bash
       env:
         DD_URL: ${{ inputs.DEFECTDOJO_URL }}
