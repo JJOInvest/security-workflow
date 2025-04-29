@@ -30,25 +30,6 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    # - name: Set env for Trivy (dev/test/prod)
-    #   if: steps.tool_for_scanning.outputs.scan_tool == 'trivy'
-    #   shell: bash
-    #   run: |
-    #     # Set env for Trivy (dev/test/prod)
-
-    #     exit_code_env_trivy=0
-
-    #     if [[ "$GITHUB_WORKFLOW" == *"prod"* ]]; then
-    #       exit_code_env_trivy=1
-    #       echo "Running Helm scan in prod"
-    #       echo "If High or Critical vulnerabilities are found, the pipeline will fail"
-    #     else
-    #       echo "Running Helm scan in non-prod environment"
-    #       echo "You can find reports in artifacts"
-    #     fi
-
-    #     echo "exit_code_env_trivy=$exit_code_env_trivy" >> $GITHUB_OUTPUT
-    #   id: exit_code_env_trivy
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
@@ -128,6 +109,14 @@ runs:
         DD_EXTRA_HEADER_2: CF-Access-Client-Secret
         DD_EXTRA_HEADER_2_VALUE: ${{ inputs.CF_ACCESS_CLIENT_SECRET }}
       run: |
+        if ${{ github.event.repository.name }}=="jjo-invest-backend-v2"
+          then
+            sleep(3)
+            echo "Start Import in DefectDojo"
+        else
+          echo "Start Import in DefectDojo"
+        fi  
+        
         docker run --rm \
         -e DD_URL \
         -e DD_API_KEY \
@@ -168,6 +157,14 @@ runs:
         LOW_THRESHOLD: 50 
         INFO_THRESHOLD: 0 #0 - значит, по данному параметру QG нет
       run: |
+        if ${{ github.event.repository.name }}=="jjo-invest-backend-v2"
+          then
+            sleep(3)
+            echo "Start checking QG"
+        else
+          echo "Start checking QG"
+        fi
+        
         docker run --rm \
         -e DD_URL \
         -e DD_API_KEY \
