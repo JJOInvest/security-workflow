@@ -94,8 +94,8 @@ runs:
           
           if [ "${{ github.event.repository.name }}" == "jjo-invest-backend-v2" ]
           then
-              sleep 3
-              echo "########IMPORT $short_name TO DEFECTDOJO########"
+              echo "########Sleep & IMPORT $short_name TO DEFECTDOJO########"
+              sleep 5
           else
               echo "########IMPORT $short_name TO DEFECTDOJO########"
           fi        
@@ -119,9 +119,9 @@ runs:
           echo "IMPORT:$import_exit" >> exit_codes.txt
 
           if [ "${{ github.event.repository.name }}" == "jjo-invest-backend-v2" ]
-          then
-              sleep 3
-              echo "########RUN QG FOR $short_name########"
+          then              
+              echo "########Sleep and RUN QG FOR $short_name########"
+              sleep 5
           else
               echo "########RUN QG FOR $short_name########"
           fi          
