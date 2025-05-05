@@ -85,7 +85,7 @@ runs:
         image-ref: "ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_tag.outputs.tag }}"
         format: "json"
         output: "trivy-image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json"
-        severity: 'CRITICAL,HIGH' #try to not to kill DD
+        severity: "CRITICAL" #try to not to kill DD
         exit-code: 0
     
     - name: Upload Trivy (JSON report)
@@ -104,7 +104,7 @@ runs:
         format: "template"
         template: "@$HOME/.local/bin/trivy-bin/contrib/html.tpl"
         output: "trivy-image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.html"
-        severity: 'CRITICAL,HIGH' #try to not to kill DD
+        #severity: "CRITICAL" #try to not to kill DD
         exit-code: 0
         skip-setup-trivy: true
     
