@@ -54,7 +54,8 @@ runs:
         format: "json"
         scan-ref: "${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.yaml"
         output: "helm-${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.json"
-        exit-code: 1
+        severity: "CRITICAL" #QG только по критам
+        exit-code: 2 # роняем джобу с кодом 2
     
     - name: Upload Trivy (JSON report)
       if: always()
@@ -74,8 +75,8 @@ runs:
         scan-ref: "${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.yaml"
         template: "@$HOME/.local/bin/trivy-bin/contrib/html.tpl"
         output: "helm-${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.html"
-        # severity: 'CRITICAL,HIGH'
-        exit-code: 1
+        #severity: "CRITICAL" #Здесь этот параметр под комментом - нужен полный отчёт
+        exit-code: 0 # не роняем джобу
         skip-setup-trivy: true
     
     - name: Upload Trivy (HTML report)
