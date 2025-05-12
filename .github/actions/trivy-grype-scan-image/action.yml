@@ -108,6 +108,7 @@ runs:
         format: "template"
         template: "@$HOME/.local/bin/trivy-bin/contrib/html.tpl"
         output: "trivy-image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.html"
+        severity: "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
         exit-code: 0 # не роняем джобу
         cache: "false"
     
