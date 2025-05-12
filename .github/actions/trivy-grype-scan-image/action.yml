@@ -109,7 +109,7 @@ runs:
         output: "trivy-image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.html"
         #severity: "CRITICAL" #Здесь этот параметр под комментом - нужен полный отчёт
         exit-code: 0 # не роняем джобу
-        skip-setup-trivy: true
+        #skip-setup-trivy: true
     
     - name: Upload Trivy (HTML report)
       if: always() && steps.tool_for_scanning.outputs.scan_tool == 'trivy'

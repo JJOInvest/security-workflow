@@ -77,7 +77,7 @@ runs:
         output: "helm-${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.html"
         #severity: "CRITICAL" #Здесь этот параметр под комментом - нужен полный отчёт
         exit-code: 0 # не роняем джобу
-        skip-setup-trivy: true
+        #skip-setup-trivy: true
     
     - name: Upload Trivy (HTML report)
       if: always()
