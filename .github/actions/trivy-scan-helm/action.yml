@@ -76,6 +76,7 @@ runs:
         scan-ref: "${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.yaml"
         template: "@$HOME/.local/bin/trivy-bin/contrib/html.tpl"
         output: "helm-${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.html"
+        severity: "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
         exit-code: 0 # не роняем джобу
         cache: "false"
     
