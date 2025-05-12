@@ -90,7 +90,7 @@ runs:
         output: "trivy-image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json"
         severity: "CRITICAL" #QG только по критам
         exit-code: 2 # роняем джобу с кодом 2
-        cache: "false"
+        # cache: "false"
     
     - name: Upload Trivy (JSON report)
       if: always() && steps.tool_for_scanning.outputs.scan_tool == 'trivy'
@@ -103,14 +103,15 @@ runs:
     - name: Run Trivy (HTML report)
       if: always() && steps.tool_for_scanning.outputs.scan_tool == 'trivy'
       uses: aquasecurity/trivy-action@0.29.0
+      env:
+        TRIVY_SEVERITY: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
       with:
         image-ref: "ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_tag.outputs.tag }}"
         format: "template"
         template: "@$HOME/.local/bin/trivy-bin/contrib/html.tpl"
         output: "trivy-image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.html"
-        severity: "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
         exit-code: 0 # не роняем джобу
-        cache: "false"
+        # cache: "false"
     
     - name: Upload Trivy (HTML report)
       if: always() && steps.tool_for_scanning.outputs.scan_tool == 'trivy'
