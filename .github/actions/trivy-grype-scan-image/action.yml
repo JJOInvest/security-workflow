@@ -90,6 +90,7 @@ runs:
         output: "trivy-image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json"
         severity: "CRITICAL" #QG только по критам
         exit-code: 2 # роняем джобу с кодом 2
+        cache: "false"
     
     - name: Upload Trivy (JSON report)
       if: always() && steps.tool_for_scanning.outputs.scan_tool == 'trivy'

@@ -57,6 +57,7 @@ runs:
         output: "helm-${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.json"
         severity: "CRITICAL" #QG только по критам
         exit-code: 2 # роняем джобу с кодом 2
+        cache: "false"
     
     - name: Upload Trivy (JSON report)
       if: always()
