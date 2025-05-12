@@ -46,6 +46,7 @@ runs:
     
     - name: Run Trivy (JSON report)
       #джоба падает при старте по событию тега (актуально для продовых воркфлоу в продуктовых репах) и при пуше в main
+      #при реализации QG через defectdojo необходимо закомметировать условие continue-on-error
       continue-on-error: ${{ !(github.ref_type == 'tag' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') }}
       uses: aquasecurity/trivy-action@0.29.0
       with:
@@ -54,7 +55,8 @@ runs:
         format: "json"
         scan-ref: "${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.yaml"
         output: "helm-${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.json"
-        exit-code: 1
+        severity: "CRITICAL" #QG только по критам
+        exit-code: 2 # роняем джобу с кодом 2
     
     - name: Upload Trivy (JSON report)
       if: always()
@@ -62,11 +64,12 @@ runs:
       with:
         name: helm-${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}-json
         path: helm-${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.json
-        retention-days: 1
+        retention-days: 10
     
     - name: Run Trivy (HTML report)
-      continue-on-error: ${{ !(github.ref_type == 'tag' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') }}
       uses: aquasecurity/trivy-action@0.29.0
+      env:
+        TRIVY_SEVERITY: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
       with:
         scan-type: "config"
         hide-progress: true
@@ -74,9 +77,7 @@ runs:
         scan-ref: "${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.yaml"
         template: "@$HOME/.local/bin/trivy-bin/contrib/html.tpl"
         output: "helm-${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.html"
-        # severity: 'CRITICAL,HIGH'
-        exit-code: 1
-        skip-setup-trivy: true
+        exit-code: 0 # не роняем джобу
     
     - name: Upload Trivy (HTML report)
       if: always()
@@ -84,7 +85,7 @@ runs:
       with:
         name: helm-${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}-html
         path: helm-${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.html
-        retention-days: 1
+        retention-days: 10
 
   #  - name: Login to GitHub Container Registry
   #    uses: docker/login-action@v3

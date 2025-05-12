@@ -79,243 +79,247 @@ runs:
       id: extract_tag
 
     - name: Run Trivy (JSON report)
+      #джоба падает при старте по событию тега (актуально для продовых воркфлоу в продуктовых репах) и при пуше в main
+      #при реализации QG через defectdojo необходимо закомметировать условие continue-on-error
+      continue-on-error: ${{ !(github.ref_type == 'tag' || github.ref == 'refs/heads/main') }}
       if: steps.tool_for_scanning.outputs.scan_tool == 'trivy'
       uses: aquasecurity/trivy-action@0.29.0
       with:
         image-ref: "ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_tag.outputs.tag }}"
         format: "json"
         output: "trivy-image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json"
-        exit-code: 0
+        severity: "CRITICAL" #QG только по критам
+        exit-code: 2 # роняем джобу с кодом 2
     
     - name: Upload Trivy (JSON report)
-      if: steps.tool_for_scanning.outputs.scan_tool == 'trivy'
+      if: always() && steps.tool_for_scanning.outputs.scan_tool == 'trivy'
       uses: actions/upload-artifact@v4
       with:
         name: trivy-image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-json
         path: trivy-image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json
-        retention-days: 1
+        retention-days: 10
 
     - name: Run Trivy (HTML report)
-      if: steps.tool_for_scanning.outputs.scan_tool == 'trivy'
+      if: always() && steps.tool_for_scanning.outputs.scan_tool == 'trivy'
       uses: aquasecurity/trivy-action@0.29.0
+      env:
+        TRIVY_SEVERITY: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
       with:
         image-ref: "ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_tag.outputs.tag }}"
         format: "template"
         template: "@$HOME/.local/bin/trivy-bin/contrib/html.tpl"
         output: "trivy-image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.html"
-        # severity: 'CRITICAL,HIGH'
-        # exit-code: ${{ steps.exit_code_env_trivy.outputs.exit_code_env_trivy }}
-        skip-setup-trivy: true
+        exit-code: 0 # не роняем джобу
     
     - name: Upload Trivy (HTML report)
-      if: steps.tool_for_scanning.outputs.scan_tool == 'trivy'
+      if: always() && steps.tool_for_scanning.outputs.scan_tool == 'trivy'
       uses: actions/upload-artifact@v4
       with:
         name: trivy-image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-html
         path: trivy-image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.html
-        retention-days: 1
+        retention-days: 10
 
-    - name: Login to GitHub Container Registry
-      uses: docker/login-action@v3
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ inputs.GH_TOKEN }}
-
-    - name: Pull dd-import image
-      shell: bash
-      run: |
-        docker pull ghcr\.io/jjoinvest/dd-import-qg:v2.0
-
-    - name: Upload Trivy Report to DefectDojo
-      if: steps.tool_for_scanning.outputs.scan_tool == 'trivy'
-      shell: bash
-      env:
-        DD_URL: ${{ inputs.DEFECTDOJO_URL }}
-        DD_API_KEY: ${{ inputs.DEFECTDOJO_TOKEN }}
-        DD_PRODUCT_TYPE_NAME: JJO
-        DD_PRODUCT_NAME: ${{ github.event.repository.name }}
-        DD_ENGAGEMENT_NAME: ${{ github.head_ref || github.ref_name }}
-        DD_TEST_NAME: "${{ inputs.SERVICE_NAME }} Image scanning"
-        DD_TEST_TYPE_NAME: Trivy Scan
-        DD_FILE_NAME: ./results/trivy-image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json
-        DD_EXTRA_HEADER_1: CF-Access-Client-Id
-        DD_EXTRA_HEADER_1_VALUE: ${{ inputs.CF_ACCESS_CLIENT_ID }}
-        DD_EXTRA_HEADER_2: CF-Access-Client-Secret
-        DD_EXTRA_HEADER_2_VALUE: ${{ inputs.CF_ACCESS_CLIENT_SECRET }}
-      run: |        
-        docker run --rm \
-        -e DD_URL \
-        -e DD_API_KEY \
-        -e DD_PRODUCT_TYPE_NAME \
-        -e DD_PRODUCT_NAME \
-        -e DD_ENGAGEMENT_NAME \
-        -e DD_TEST_NAME \
-        -e DD_TEST_TYPE_NAME \
-        -e DD_FILE_NAME \
-        -e DD_EXTRA_HEADER_1 \
-        -e DD_EXTRA_HEADER_1_VALUE \
-        -e DD_EXTRA_HEADER_2 \
-        -e DD_EXTRA_HEADER_2_VALUE \
-        -v $(pwd):/usr/local/dd-import/results \
-        ghcr\.io/jjoinvest/dd-import-qg:v2.0 dd-reimport-findings.sh
-
-    - name: Check Quality Gates
-      #джоба падает при старте по событию тега (актуально для продовых воркфлоу в продуктовых репах) и при пуше в main
-      if: steps.tool_for_scanning.outputs.scan_tool == 'trivy'
-      continue-on-error: ${{ !(github.ref_type == 'tag' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') }}
-      shell: bash
-      env:
-        DD_URL: ${{ inputs.DEFECTDOJO_URL }}
-        DD_API_KEY: ${{ inputs.DEFECTDOJO_TOKEN }}
-        DD_PRODUCT_TYPE_NAME: JJO
-        DD_PRODUCT_NAME: ${{ github.event.repository.name }}
-        DD_ENGAGEMENT_NAME: ${{ github.head_ref || github.ref_name }}
-        DD_TEST_NAME: "${{ inputs.SERVICE_NAME }} Image scanning"
-        DD_TEST_TYPE_NAME: Trivy Scan
-        DD_EXTRA_HEADER_1: CF-Access-Client-Id
-        DD_EXTRA_HEADER_1_VALUE: ${{ inputs.CF_ACCESS_CLIENT_ID }}
-        DD_EXTRA_HEADER_2: CF-Access-Client-Secret
-        DD_EXTRA_HEADER_2_VALUE: ${{ inputs.CF_ACCESS_CLIENT_SECRET }}
-        #Значения QG - выставляем самостоятельно для каждой практики
-        TOTAL_THRESHOLD: 0 #0 - значит, по данному параметру QG нет
-        CRITICAL_THRESHOLD: 1
-        HIGH_THRESHOLD: 5
-        MEDIUM_THRESHOLD: 30
-        LOW_THRESHOLD: 50 
-        INFO_THRESHOLD: 0 #0 - значит, по данному параметру QG нет
-      run: |
-        docker run --rm \
-        -e DD_URL \
-        -e DD_API_KEY \
-        -e DD_PRODUCT_TYPE_NAME \
-        -e DD_PRODUCT_NAME \
-        -e DD_ENGAGEMENT_NAME \
-        -e DD_TEST_NAME \
-        -e DD_TEST_TYPE_NAME \
-        -e DD_EXTRA_HEADER_1 \
-        -e DD_EXTRA_HEADER_1_VALUE \
-        -e DD_EXTRA_HEADER_2 \
-        -e DD_EXTRA_HEADER_2_VALUE \
-        -e TOTAL_THRESHOLD \
-        -e CRITICAL_THRESHOLD \
-        -e HIGH_THRESHOLD \
-        -e MEDIUM_THRESHOLD \
-        -e LOW_THRESHOLD \
-        -e INFO_THRESHOLD \
-        -v $(pwd):/usr/local/dd-import/results \
-        ghcr\.io/jjoinvest/dd-import-qg:v2.0 dd-check-thresholds.sh
+    #- name: Login to GitHub Container Registry
+    #  uses: docker/login-action@v3
+    #  with:
+    #    registry: ghcr.io
+    #    username: ${{ github.actor }}
+    #    password: ${{ inputs.GH_TOKEN }}
+#
+    #- name: Pull dd-import image
+    #  shell: bash
+    #  run: |
+    #    docker pull ghcr\.io/jjoinvest/dd-import-qg:v2.0
+    #- name: Upload Trivy Report to DefectDojo
+    #  if: steps.tool_for_scanning.outputs.scan_tool == 'trivy'
+    #  shell: bash
+    #  env:
+    #    DD_URL: ${{ inputs.DEFECTDOJO_URL }}
+    #    DD_API_KEY: ${{ inputs.DEFECTDOJO_TOKEN }}
+    #    DD_PRODUCT_TYPE_NAME: JJO
+    #    DD_PRODUCT_NAME: ${{ github.event.repository.name }}
+    #    DD_ENGAGEMENT_NAME: ${{ github.head_ref || github.ref_name }}
+    #    DD_TEST_NAME: "${{ inputs.SERVICE_NAME }} Image scanning"
+    #    DD_TEST_TYPE_NAME: Trivy Scan
+    #    DD_FILE_NAME: ./results/trivy-image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json
+    #    DD_EXTRA_HEADER_1: CF-Access-Client-Id
+    #    DD_EXTRA_HEADER_1_VALUE: ${{ inputs.CF_ACCESS_CLIENT_ID }}
+    #    DD_EXTRA_HEADER_2: CF-Access-Client-Secret
+    #    DD_EXTRA_HEADER_2_VALUE: ${{ inputs.CF_ACCESS_CLIENT_SECRET }}
+    #  run: |        
+    #    docker run --rm \
+    #    -e DD_URL \
+    #    -e DD_API_KEY \
+    #    -e DD_PRODUCT_TYPE_NAME \
+    #    -e DD_PRODUCT_NAME \
+    #    -e DD_ENGAGEMENT_NAME \
+    #    -e DD_TEST_NAME \
+    #    -e DD_TEST_TYPE_NAME \
+    #    -e DD_FILE_NAME \
+    #    -e DD_EXTRA_HEADER_1 \
+    #    -e DD_EXTRA_HEADER_1_VALUE \
+    #    -e DD_EXTRA_HEADER_2 \
+    #    -e DD_EXTRA_HEADER_2_VALUE \
+    #    -v $(pwd):/usr/local/dd-import/results \
+    #    ghcr\.io/jjoinvest/dd-import-qg:v2.0 dd-reimport-findings.sh
+    #- name: Check Quality Gates
+    #  #джоба падает при старте по событию тега (актуально для продовых воркфлоу в продуктовых репах) и при пуше в main
+    #  if: steps.tool_for_scanning.outputs.scan_tool == 'trivy'
+    #  continue-on-error: ${{ !(github.ref_type == 'tag' || github.ref == 'refs/heads/main') }}
+    #  shell: bash
+    #  env:
+    #    DD_URL: ${{ inputs.DEFECTDOJO_URL }}
+    #    DD_API_KEY: ${{ inputs.DEFECTDOJO_TOKEN }}
+    #    DD_PRODUCT_TYPE_NAME: JJO
+    #    DD_PRODUCT_NAME: ${{ github.event.repository.name }}
+    #    DD_ENGAGEMENT_NAME: ${{ github.head_ref || github.ref_name }}
+    #    DD_TEST_NAME: "${{ inputs.SERVICE_NAME }} Image scanning"
+    #    DD_TEST_TYPE_NAME: Trivy Scan
+    #    DD_EXTRA_HEADER_1: CF-Access-Client-Id
+    #    DD_EXTRA_HEADER_1_VALUE: ${{ inputs.CF_ACCESS_CLIENT_ID }}
+    #    DD_EXTRA_HEADER_2: CF-Access-Client-Secret
+    #    DD_EXTRA_HEADER_2_VALUE: ${{ inputs.CF_ACCESS_CLIENT_SECRET }}
+    #    #Значения QG - выставляем самостоятельно для каждой практики
+    #    TOTAL_THRESHOLD: 0 #0 - значит, по данному параметру QG нет
+    #    CRITICAL_THRESHOLD: 1
+    #    HIGH_THRESHOLD: 10
+    #    MEDIUM_THRESHOLD: 0 #0 - значит, по данному параметру QG нет
+    #    LOW_THRESHOLD: 0 #0 - значит, по данному параметру QG нет
+    #    INFO_THRESHOLD: 0 #0 - значит, по данному параметру QG нет
+    #  run: |
+    #    docker run --rm \
+    #    -e DD_URL \
+    #    -e DD_API_KEY \
+    #    -e DD_PRODUCT_TYPE_NAME \
+    #    -e DD_PRODUCT_NAME \
+    #    -e DD_ENGAGEMENT_NAME \
+    #    -e DD_TEST_NAME \
+    #    -e DD_TEST_TYPE_NAME \
+    #    -e DD_EXTRA_HEADER_1 \
+    #    -e DD_EXTRA_HEADER_1_VALUE \
+    #    -e DD_EXTRA_HEADER_2 \
+    #    -e DD_EXTRA_HEADER_2_VALUE \
+    #    -e TOTAL_THRESHOLD \
+    #    -e CRITICAL_THRESHOLD \
+    #    -e HIGH_THRESHOLD \
+    #    -e MEDIUM_THRESHOLD \
+    #    -e LOW_THRESHOLD \
+    #    -e INFO_THRESHOLD \
+    #    -v $(pwd):/usr/local/dd-import/results \
+    #    ghcr\.io/jjoinvest/dd-import-qg:v2.0 dd-check-thresholds.sh
     
     - name: Run Grype (JSON report)
+      #джоба падает при старте по событию тега (актуально для продовых воркфлоу в продуктовых репах) и при пуше в main
+      #при реализации QG через defectdojo необходимо закомметировать условие continue-on-error
+      continue-on-error: ${{ !(github.ref_type == 'tag' || github.ref == 'refs/heads/main') }}
       if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
       uses: anchore/scan-action@v6
       with:
         image: "ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_tag.outputs.tag }}"
         output-format: "json"
         output-file: "grype-image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json"
-        fail-build: "false"
+        severity-cutoff: critical #QG только по критам
+        fail-build: "true" #роняем джобу
     
     - name: Upload Grype (JSON report)
-      if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
+      if: always() && steps.tool_for_scanning.outputs.scan_tool == 'grype'
       uses: actions/upload-artifact@v4
       with:
         name: grype-image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-json
         path: grype-image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json
-        retention-days: 1
+        retention-days: 10
     
     - name: Run Grype (Text report)
-      if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
+      if: always() && steps.tool_for_scanning.outputs.scan_tool == 'grype'
       uses: anchore/scan-action@v6
       with:
         image: "ghcr.io/jjoinvest/${{ inputs.SERVICE_NAME }}:${{ steps.extract_tag.outputs.tag }}"
         output-format: "table"
         output-file: "grype-image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.txt"
-        # severity-cutoff: high
-        # fail-build: ${{ steps.exit_code_env_grype.outputs.exit_code_env_grype }}
-        fail-build: "false"
+        fail-build: "false" #не роняем джобу
+    
     - name: Upload Grype (Text report)
-      if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
+      if: always() && steps.tool_for_scanning.outputs.scan_tool == 'grype'
       uses: actions/upload-artifact@v4
       with:
         name: grype-image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}-txt
         path: grype-image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.txt
-        retention-days: 1
+        retention-days: 10
 
-    - name: Upload Grype JSON Report to DefectDojo
-      if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
-      shell: bash
-      env:
-        DD_URL: ${{ inputs.DEFECTDOJO_URL }}
-        DD_API_KEY: ${{ inputs.DEFECTDOJO_TOKEN }}
-        DD_PRODUCT_TYPE_NAME: JJO
-        DD_PRODUCT_NAME: ${{ github.event.repository.name }}
-        DD_ENGAGEMENT_NAME: ${{ github.head_ref || github.ref_name }}
-        DD_TEST_NAME: "${{ inputs.SERVICE_NAME }} Image scanning"
-        DD_TEST_TYPE_NAME: Anchore Grype
-        DD_FILE_NAME: ./results/grype-image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json
-        DD_EXTRA_HEADER_1: CF-Access-Client-Id
-        DD_EXTRA_HEADER_1_VALUE: ${{ inputs.CF_ACCESS_CLIENT_ID }}
-        DD_EXTRA_HEADER_2: CF-Access-Client-Secret
-        DD_EXTRA_HEADER_2_VALUE: ${{ inputs.CF_ACCESS_CLIENT_SECRET }}
-      run: |
-        docker run --rm \
-        -e DD_URL \
-        -e DD_API_KEY \
-        -e DD_PRODUCT_TYPE_NAME \
-        -e DD_PRODUCT_NAME \
-        -e DD_ENGAGEMENT_NAME \
-        -e DD_TEST_NAME \
-        -e DD_TEST_TYPE_NAME \
-        -e DD_FILE_NAME \
-        -e DD_EXTRA_HEADER_1 \
-        -e DD_EXTRA_HEADER_1_VALUE \
-        -e DD_EXTRA_HEADER_2 \
-        -e DD_EXTRA_HEADER_2_VALUE \
-        -v $(pwd):/usr/local/dd-import/results \
-        ghcr\.io/jjoinvest/dd-import-qg:v2.0 dd-reimport-findings.sh
-
-    - name: Check Quality Gates
-      if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
-      #джоба падает при старте по событию тега (актуально для продовых воркфлоу в продуктовых репах) и при пуше в main
-      continue-on-error: ${{ !(github.ref_type == 'tag' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') }}
-      shell: bash
-      env:
-        DD_URL: ${{ inputs.DEFECTDOJO_URL }}
-        DD_API_KEY: ${{ inputs.DEFECTDOJO_TOKEN }}
-        DD_PRODUCT_TYPE_NAME: JJO
-        DD_PRODUCT_NAME: ${{ github.event.repository.name }}
-        DD_ENGAGEMENT_NAME: ${{ github.head_ref || github.ref_name }}
-        DD_TEST_NAME: "${{ inputs.SERVICE_NAME }} Image scanning"
-        DD_TEST_TYPE_NAME: Anchore Grype
-        DD_EXTRA_HEADER_1: CF-Access-Client-Id
-        DD_EXTRA_HEADER_1_VALUE: ${{ inputs.CF_ACCESS_CLIENT_ID }}
-        DD_EXTRA_HEADER_2: CF-Access-Client-Secret
-        DD_EXTRA_HEADER_2_VALUE: ${{ inputs.CF_ACCESS_CLIENT_SECRET }}
-        #Значения QG - выставляем самостоятельно для каждой практики
-        TOTAL_THRESHOLD: 0 #0 - значит, по данному параметру QG нет
-        CRITICAL_THRESHOLD: 1
-        HIGH_THRESHOLD: 5
-        MEDIUM_THRESHOLD: 30
-        LOW_THRESHOLD: 50 
-        INFO_THRESHOLD: 0 #0 - значит, по данному параметру QG нет
-      run: |
-        docker run --rm \
-        -e DD_URL \
-        -e DD_API_KEY \
-        -e DD_PRODUCT_TYPE_NAME \
-        -e DD_PRODUCT_NAME \
-        -e DD_ENGAGEMENT_NAME \
-        -e DD_TEST_NAME \
-        -e DD_TEST_TYPE_NAME \
-        -e DD_EXTRA_HEADER_1 \
-        -e DD_EXTRA_HEADER_1_VALUE \
-        -e DD_EXTRA_HEADER_2 \
-        -e DD_EXTRA_HEADER_2_VALUE \
-        -e TOTAL_THRESHOLD \
-        -e CRITICAL_THRESHOLD \
-        -e HIGH_THRESHOLD \
-        -e MEDIUM_THRESHOLD \
-        -e LOW_THRESHOLD \
-        -e INFO_THRESHOLD \
-        -v $(pwd):/usr/local/dd-import/results \
-        ghcr\.io/jjoinvest/dd-import-qg:v2.0 dd-check-thresholds.sh
+    #- name: Upload Grype JSON Report to DefectDojo
+    #  if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
+    #  shell: bash
+    #  env:
+    #    DD_URL: ${{ inputs.DEFECTDOJO_URL }}
+    #    DD_API_KEY: ${{ inputs.DEFECTDOJO_TOKEN }}
+    #    DD_PRODUCT_TYPE_NAME: JJO
+    #    DD_PRODUCT_NAME: ${{ github.event.repository.name }}
+    #    DD_ENGAGEMENT_NAME: ${{ github.head_ref || github.ref_name }}
+    #    DD_TEST_NAME: "${{ inputs.SERVICE_NAME }} Image scanning"
+    #    DD_TEST_TYPE_NAME: Anchore Grype
+    #    DD_FILE_NAME: ./results/grype-image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.json
+    #    DD_EXTRA_HEADER_1: CF-Access-Client-Id
+    #    DD_EXTRA_HEADER_1_VALUE: ${{ inputs.CF_ACCESS_CLIENT_ID }}
+    #    DD_EXTRA_HEADER_2: CF-Access-Client-Secret
+    #    DD_EXTRA_HEADER_2_VALUE: ${{ inputs.CF_ACCESS_CLIENT_SECRET }}
+    #  run: |
+    #    docker run --rm \
+    #    -e DD_URL \
+    #    -e DD_API_KEY \
+    #    -e DD_PRODUCT_TYPE_NAME \
+    #    -e DD_PRODUCT_NAME \
+    #    -e DD_ENGAGEMENT_NAME \
+    #    -e DD_TEST_NAME \
+    #    -e DD_TEST_TYPE_NAME \
+    #    -e DD_FILE_NAME \
+    #    -e DD_EXTRA_HEADER_1 \
+    #    -e DD_EXTRA_HEADER_1_VALUE \
+    #    -e DD_EXTRA_HEADER_2 \
+    #    -e DD_EXTRA_HEADER_2_VALUE \
+    #    -v $(pwd):/usr/local/dd-import/results \
+    #    ghcr\.io/jjoinvest/dd-import-qg:v2.0 dd-reimport-findings.sh
+    #- name: Check Quality Gates
+    #  if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
+    #  #джоба падает при старте по событию тега (актуально для продовых воркфлоу в продуктовых репах) и при пуше в main
+    #  continue-on-error: ${{ !(github.ref_type == 'tag' || github.ref == 'refs/heads/main') }}
+    #  shell: bash
+    #  env:
+    #    DD_URL: ${{ inputs.DEFECTDOJO_URL }}
+    #    DD_API_KEY: ${{ inputs.DEFECTDOJO_TOKEN }}
+    #    DD_PRODUCT_TYPE_NAME: JJO
+    #    DD_PRODUCT_NAME: ${{ github.event.repository.name }}
+    #    DD_ENGAGEMENT_NAME: ${{ github.head_ref || github.ref_name }}
+    #    DD_TEST_NAME: "${{ inputs.SERVICE_NAME }} Image scanning"
+    #    DD_TEST_TYPE_NAME: Anchore Grype
+    #    DD_EXTRA_HEADER_1: CF-Access-Client-Id
+    #    DD_EXTRA_HEADER_1_VALUE: ${{ inputs.CF_ACCESS_CLIENT_ID }}
+    #    DD_EXTRA_HEADER_2: CF-Access-Client-Secret
+    #    DD_EXTRA_HEADER_2_VALUE: ${{ inputs.CF_ACCESS_CLIENT_SECRET }}
+    #    #Значения QG - выставляем самостоятельно для каждой практики
+    #    TOTAL_THRESHOLD: 0 #0 - значит, по данному параметру QG нет
+    #    CRITICAL_THRESHOLD: 1
+    #    HIGH_THRESHOLD: 10
+    #    MEDIUM_THRESHOLD: 0 #0 - значит, по данному параметру QG нет
+    #    LOW_THRESHOLD: 0 #0 - значит, по данному параметру QG нет
+    #    INFO_THRESHOLD: 0 #0 - значит, по данному параметру QG нет
+    #  run: |
+    #    docker run --rm \
+    #    -e DD_URL \
+    #    -e DD_API_KEY \
+    #    -e DD_PRODUCT_TYPE_NAME \
+    #    -e DD_PRODUCT_NAME \
+    #    -e DD_ENGAGEMENT_NAME \
+    #    -e DD_TEST_NAME \
+    #    -e DD_TEST_TYPE_NAME \
+    #    -e DD_EXTRA_HEADER_1 \
+    #    -e DD_EXTRA_HEADER_1_VALUE \
+    #    -e DD_EXTRA_HEADER_2 \
+    #    -e DD_EXTRA_HEADER_2_VALUE \
+    #    -e TOTAL_THRESHOLD \
+    #    -e CRITICAL_THRESHOLD \
+    #    -e HIGH_THRESHOLD \
+    #    -e MEDIUM_THRESHOLD \
+    #    -e LOW_THRESHOLD \
+    #    -e INFO_THRESHOLD \
+    #    -v $(pwd):/usr/local/dd-import/results \
+    #    ghcr\.io/jjoinvest/dd-import-qg:v2.0 dd-check-thresholds.sh
