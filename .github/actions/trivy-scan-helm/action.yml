@@ -46,6 +46,7 @@ runs:
     
     - name: Run Trivy (JSON report)
       #джоба падает при старте по событию тега (актуально для продовых воркфлоу в продуктовых репах) и при пуше в main
+      #при реализации QG через defectdojo необходимо закомметировать условие continue-on-error
       continue-on-error: ${{ !(github.ref_type == 'tag' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') }}
       uses: aquasecurity/trivy-action@0.29.0
       with:
@@ -66,7 +67,6 @@ runs:
         retention-days: 10
     
     - name: Run Trivy (HTML report)
-      continue-on-error: ${{ !(github.ref_type == 'tag' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') }}
       uses: aquasecurity/trivy-action@0.29.0
       with:
         scan-type: "config"
