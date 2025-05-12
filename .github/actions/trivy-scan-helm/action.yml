@@ -76,6 +76,7 @@ runs:
         template: "@$HOME/.local/bin/trivy-bin/contrib/html.tpl"
         output: "helm-${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.html"
         exit-code: 0 # не роняем джобу
+        cache: "false"
     
     - name: Upload Trivy (HTML report)
       if: always()

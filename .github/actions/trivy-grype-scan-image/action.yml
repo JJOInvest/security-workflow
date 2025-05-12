@@ -108,7 +108,7 @@ runs:
         template: "@$HOME/.local/bin/trivy-bin/contrib/html.tpl"
         output: "trivy-image-${{ inputs.SERVICE_NAME }}-${{ steps.extract_tag.outputs.tag }}.html"
         exit-code: 0 # не роняем джобу
-        #skip-setup-trivy: true
+        cache: "false"
     
     - name: Upload Trivy (HTML report)
       if: always() && steps.tool_for_scanning.outputs.scan_tool == 'trivy'
