@@ -5,21 +5,21 @@ inputs:
   SERVICE_NAME:
     type: string
     required: true
-  #DEFECTDOJO_URL:
-  #  required: true
-  #  description: 'DefectDojo URL'
-  #DEFECTDOJO_TOKEN:
-  #  required: true
-  #  description: 'DefectDojo API Key'
-  #CF_ACCESS_CLIENT_ID:
-  #  required: true
-  #  description: 'CF access client id'
-  #CF_ACCESS_CLIENT_SECRET:
-  #  required: true
-  #  description: 'CF access client secret'
-  #GH_TOKEN:
-  #  required: true
-  #  description: 'GitHub token for ghcr login'
+  DEFECTDOJO_URL:
+    required: true
+    description: 'DefectDojo URL'
+  DEFECTDOJO_TOKEN:
+    required: true
+    description: 'DefectDojo API Key'
+  CF_ACCESS_CLIENT_ID:
+    required: true
+    description: 'CF access client id'
+  CF_ACCESS_CLIENT_SECRET:
+    required: true
+    description: 'CF access client secret'
+  GH_TOKEN:
+    required: true
+    description: 'GitHub token for ghcr login'
 
 runs:
   using: 'composite'
