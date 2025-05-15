@@ -81,7 +81,7 @@ runs:
     - name: Run Trivy (JSON report)
       #джоба падает при старте по событию тега (актуально для продовых воркфлоу в продуктовых репах) и при пуше в main
       #при реализации QG через defectdojo необходимо закомметировать условие continue-on-error
-      continue-on-error: ${{ !(github.ref_type == 'tag' || github.ref == 'refs/heads/main') }}
+      continue-on-error: ${{ !(github.ref_type == 'tag' || github.ref == 'refs/heads/demo') }}
       if: steps.tool_for_scanning.outputs.scan_tool == 'trivy'
       uses: aquasecurity/trivy-action@0.29.0
       with:
@@ -211,7 +211,7 @@ runs:
     - name: Run Grype (JSON report)
       #джоба падает при старте по событию тега (актуально для продовых воркфлоу в продуктовых репах) и при пуше в main
       #при реализации QG через defectdojo необходимо закомметировать условие continue-on-error
-      continue-on-error: ${{ !(github.ref_type == 'tag' || github.ref == 'refs/heads/main') }}
+      continue-on-error: ${{ !(github.ref_type == 'tag' || github.ref == 'refs/heads/demo') }}
       if: steps.tool_for_scanning.outputs.scan_tool == 'grype'
       uses: anchore/scan-action@v6
       with:
