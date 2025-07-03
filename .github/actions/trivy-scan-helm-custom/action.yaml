@@ -1,0 +1,101 @@
+name: 'Trivy Helm Chart Security Scan'
+description: 'Scans Helm charts from specified public (or organization) repository for security vulnerabilities using Trivy'
+inputs:
+  CHART_REPO:
+    description: 'Repository of the Helm chart to scan'
+    required: true
+  CHART_NAME:
+    description: 'Name of the Helm chart to scan in the repository'
+    required: true
+  CHART_VER:
+    description: 'Version of the Helm chart to scan'
+    required: true
+  CHART_VALUES:
+    description: 'Values file for the Helm chart'
+    required: true
+  SERVICE_NAME:
+    description: 'Name of the service being scanned'
+    required: true
+  DEFECTDOJO_URL:
+    required: false
+    description: 'DefectDojo URL'
+  DEFECTDOJO_TOKEN:
+    required: false
+    description: 'DefectDojo API Key'
+  CF_ACCESS_CLIENT_ID:
+    required: false
+    description: 'CF access client id'
+  CF_ACCESS_CLIENT_SECRET:
+    required: false
+    description: 'CF access client secret'
+  GH_TOKEN:
+    required: false
+    description: 'GitHub token for ghcr login'
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Log inputs
+      shell: bash
+      run: |
+        echo "CHART_REPO: ${{ inputs.CHART_REPO }}"
+        echo "CHART_NAME: ${{ inputs.CHART_NAME }}"
+        echo "CHART_VER: ${{ inputs.CHART_VER }}"
+        echo "CHART_VALUES: ${{ inputs.CHART_VALUES }}"
+    
+    - name: Helm fetch and template
+      shell: bash
+      run: |
+        helm fetch --repo ${{ inputs.CHART_REPO }} ${{ inputs.CHART_NAME }} \
+          --version ${{ inputs.CHART_VER }} --untar
+
+        helm template ${{ inputs.SERVICE_NAME }} ./${{ inputs.CHART_NAME }} \
+          --values=${{ inputs.CHART_VALUES }} > \
+          ${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.yaml
+    
+    - name: Run Trivy (JSON report)
+      #джоба падает при старте по событию тега (актуально для продовых воркфлоу в продуктовых репах) и при пуше в main
+      #при реализации QG через defectdojo необходимо закомметировать условие continue-on-error
+      continue-on-error: ${{ !(github.ref_type == 'tag' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') }}
+      uses: aquasecurity/trivy-action@0.29.0
+      with:
+        scan-type: "config"
+        hide-progress: true 
+        format: "json"
+        scan-ref: "${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.yaml"
+        output: "helm-${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.json"
+        severity: "CRITICAL" #QG только по критам
+        exit-code: 2 # роняем джобу с кодом 2
+    
+    - name: Upload Trivy (JSON report)
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: helm-${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}-json
+        path: helm-${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.json
+        retention-days: 10
+    
+    - name: Run Trivy (HTML report)
+      uses: aquasecurity/trivy-action@0.29.0
+      env:
+        TRIVY_SEVERITY: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+      with:
+        scan-type: "config"
+        hide-progress: true
+        format: "template"
+        scan-ref: "${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.yaml"
+        template: "@$HOME/.local/bin/trivy-bin/contrib/html.tpl"
+        output: "helm-${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.html"
+        exit-code: 0 # не роняем джобу
+    
+    - name: Upload Trivy (HTML report)
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: helm-${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}-html
+        path: helm-${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.html
+        retention-days: 10
