@@ -60,9 +60,9 @@ runs:
 
         tar -xzf ${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.tgz -C trivy_tmp
 
-        if [ -d "./${{ inputs.CHART_FOLDER }}/templates" ]; then
-          echo "Copying templates from ./${{ inputs.CHART_FOLDER }}/templates to ./${{ inputs.CHART_NAME }}/templates/"
-          cp -r ./${{ inputs.CHART_FOLDER }}/templates/* ./trivy_tmp/${{ inputs.CHART_NAME }}/templates/
+        if [ -d "${{ inputs.CHART_FOLDER }}/templates" ]; then
+          echo "Copying templates from ${{ inputs.CHART_FOLDER }}/templates to ./trivy_tmp/${{ inputs.CHART_NAME }}/templates/"
+          cp -r ${{ inputs.CHART_FOLDER }}/templates/* ./trivy_tmp/${{ inputs.CHART_NAME }}/templates/
         fi
 
         ls -la ./trivy_tmp/${{ inputs.CHART_NAME }}
@@ -70,6 +70,9 @@ runs:
         helm template ${{ inputs.SERVICE_NAME }} ./trivy_tmp/${{ inputs.CHART_NAME }} \
           --values=${{ inputs.CHART_VALUES }} > \
           ${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.yaml
+
+        echo "Trivy config policy: ${{ inputs.CHART_FOLDER }}/.trivy.yaml"
+        echo "Trivy ignore file: ${{ inputs.CHART_FOLDER }}/.trivyignore"
     
     - name: Run Trivy (JSON report)
       #джоба падает при старте по событию тега (актуально для продовых воркфлоу в продуктовых репах) и при пуше в main
@@ -84,6 +87,8 @@ runs:
         output: "helm-${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.json"
         severity: "CRITICAL" #QG только по критам
         exit-code: 2 # роняем джобу с кодом 2
+        config-policy: "${{ inputs.CHART_FOLDER }}/.trivy.yaml"
+        ignorefile: "${{ inputs.CHART_FOLDER }}/.trivyignore"
     
     - name: Upload Trivy (JSON report)
       if: always()
