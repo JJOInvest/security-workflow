@@ -1,15 +1,6 @@
 name: 'Trivy Helm Chart Security Scan'
 description: 'Scans Helm charts from specified public (or organization) repository for security vulnerabilities using Trivy'
 inputs:
-  CHART_REPO:
-    description: 'Repository of the Helm chart to scan'
-    required: true
-  CHART_NAME:
-    description: 'Name of the Helm chart to scan in the repository'
-    required: true
-  CHART_VER:
-    description: 'Version of the Helm chart to scan'
-    required: true
   CHART_FOLDER:
     description: 'Folder with Chart.yaml and templates'
     required: false
@@ -53,32 +44,12 @@ runs:
     - name: Helm fetch and template
       shell: bash
       run: |
-        mkdir trivy_tmp
+        cd ${{ inputs.CHART_FOLDER }}
+        helm dependency build
 
-        helm fetch --repo ${{ inputs.CHART_REPO }} ${{ inputs.CHART_NAME }} \
-          --version ${{ inputs.CHART_VER }}
-
-        tar -xzf ${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.tgz -C trivy_tmp
-
-        if [ -d "${{ inputs.CHART_FOLDER }}/templates" ]; then
-          echo "Copying templates from ${{ inputs.CHART_FOLDER }}/templates to ./trivy_tmp/${{ inputs.CHART_NAME }}/templates/"
-          cp -r ${{ inputs.CHART_FOLDER }}/templates/* ./trivy_tmp/${{ inputs.CHART_NAME }}/templates/
-        fi
-
-        ls -la ./trivy_tmp/${{ inputs.CHART_NAME }}
-
-        helm template ${{ inputs.SERVICE_NAME }} ./trivy_tmp/${{ inputs.CHART_NAME }} \
+        helm template . \
           --values=${{ inputs.CHART_VALUES }} > \
           ${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.yaml
-
-        echo "Trivy config policy: ${{ inputs.CHART_FOLDER }}/.trivy.yaml"
-        echo "Trivy ignore file: ${{ inputs.CHART_FOLDER }}/.trivyignore"
-
-        rm -f .trivy.yaml
-        rm -f .trivyignore
-
-        cp ${{ inputs.CHART_FOLDER }}/.trivy.yaml .trivy.yaml
-        cp ${{ inputs.CHART_FOLDER }}/.trivyignore .trivyignore
 
     - name: Set values variable
       id: set-values
