@@ -79,6 +79,15 @@ runs:
 
         cp ${{ inputs.CHART_FOLDER }}/.trivy.yaml .trivy.yaml
         cp ${{ inputs.CHART_FOLDER }}/.trivyignore .trivyignore
+
+    - name: Set values variable
+      shell: bash
+      run: |
+        CHART_VALUES=$(echo "${{ inputs.CHART_VALUES }}" | sed "s|^${{ inputs.CHART_FOLDER }}/||")
+        echo "CHART_VALUES after normalization: ${CHART_VALUES}"
+        CHART_VALUES_NORMALIZED=$(echo "${CHART_VALUES}" | sed 's/\//-/g')
+        echo "CHART_VALUES_NORMALIZED: ${CHART_VALUES_NORMALIZED}"
+        echo "chart_values_normalized=${CHART_VALUES_NORMALIZED}" >> $GITHUB_OUTPUT
     
     - name: Run Trivy (JSON report)
       #джоба падает при старте по событию тега (актуально для продовых воркфлоу в продуктовых репах) и при пуше в main
@@ -89,8 +98,8 @@ runs:
         scan-type: "config"
         hide-progress: true 
         format: "json"
-        scan-ref: "${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.yaml"
-        output: "helm-${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.json"
+        scan-ref: "${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}-${{ chart_values_normalized }}.yaml"
+        output: "helm-${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}-${{ chart_values_normalized }}.json"
         severity: "CRITICAL" #QG только по критам
         exit-code: 2 # роняем джобу с кодом 2
     
@@ -98,8 +107,8 @@ runs:
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: helm-${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}-json
-        path: helm-${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.json
+        name: helm-${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}-${{ chart_values_normalized }}-json
+        path: helm-${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}-${{ chart_values_normalized }}.json
         retention-days: 10
     
     - name: Run Trivy (HTML report)
@@ -110,15 +119,15 @@ runs:
         scan-type: "config"
         hide-progress: true
         format: "template"
-        scan-ref: "${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.yaml"
+        scan-ref: "${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}-${{ chart_values_normalized }}.yaml"
         template: "@$HOME/.local/bin/trivy-bin/contrib/html.tpl"
-        output: "helm-${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.html"
+        output: "helm-${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}-${{ chart_values_normalized }}.html"
         exit-code: 0 # не роняем джобу
     
     - name: Upload Trivy (HTML report)
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: helm-${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}-html
-        path: helm-${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.html
+        name: helm-${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}-${{ chart_values_normalized }}-html
+        path: helm-${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}-${{ chart_values_normalized }}.html
         retention-days: 10
