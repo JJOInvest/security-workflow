@@ -10,6 +10,9 @@ inputs:
   CHART_VER:
     description: 'Version of the Helm chart to scan'
     required: true
+  CHART_FOLDER:
+    description: 'Folder with Chart.yaml and templates'
+    required: false
   CHART_VALUES:
     description: 'Values file for the Helm chart'
     required: true
@@ -50,17 +53,21 @@ runs:
     - name: Helm fetch and template
       shell: bash
       run: |
-        helm fetch --repo ${{ inputs.CHART_REPO }} ${{ inputs.CHART_NAME }} \
-          --version ${{ inputs.CHART_VER }} --untar
+        mkdir trivy_tmp
 
-        if [ -d "./templates" ]; then
-          echo "Copying templates from ./templates to ./${{ inputs.CHART_NAME }}/templates/"
-          cp -r ./templates/* ./${{ inputs.CHART_NAME }}/templates/
+        helm fetch --repo ${{ inputs.CHART_REPO }} ${{ inputs.CHART_NAME }} \
+          --version ${{ inputs.CHART_VER }}
+
+        tar -xzf ${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.tgz -C trivy_tmp
+
+        if [ -d "./${{ inputs.CHART_FOLDER }}/templates" ]; then
+          echo "Copying templates from ./${{ inputs.CHART_FOLDER }}/templates to ./${{ inputs.CHART_NAME }}/templates/"
+          cp -r ./${{ inputs.CHART_FOLDER }}/templates/* ./trivy_tmp/${{ inputs.CHART_NAME }}/templates/
         fi
 
-        ls -la ./${{ inputs.CHART_NAME }}
+        ls -la ./trivy_tmp/${{ inputs.CHART_NAME }}
 
-        helm template ${{ inputs.SERVICE_NAME }} ./${{ inputs.CHART_NAME }} \
+        helm template ${{ inputs.SERVICE_NAME }} ./trivy_tmp/${{ inputs.CHART_NAME }} \
           --values=${{ inputs.CHART_VALUES }} > \
           ${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.yaml
     
