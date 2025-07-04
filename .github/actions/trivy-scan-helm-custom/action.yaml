@@ -54,8 +54,11 @@ runs:
           --version ${{ inputs.CHART_VER }} --untar
 
         if [ -d "./templates" ]; then
+          echo "Copying templates from ./templates to ./${{ inputs.CHART_NAME }}/templates/"
           cp -r ./templates/* ./${{ inputs.CHART_NAME }}/templates/
         fi
+
+        ls -la ./${{ inputs.CHART_NAME }}
 
         helm template ${{ inputs.SERVICE_NAME }} ./${{ inputs.CHART_NAME }} \
           --values=${{ inputs.CHART_VALUES }} > \
