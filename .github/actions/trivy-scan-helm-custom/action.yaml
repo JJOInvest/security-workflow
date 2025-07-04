@@ -85,6 +85,8 @@ runs:
       shell: bash
       run: |
         CHART_VALUES=$(echo "${{ inputs.CHART_VALUES }}" | sed "s|^${{ inputs.CHART_FOLDER }}/||")
+        # Remove .yaml extension if present
+        CHART_VALUES="${CHART_VALUES%.yaml}"
         echo "CHART_VALUES after normalization: ${CHART_VALUES}"
         CHART_VALUES_NORMALIZED=$(echo "${CHART_VALUES}" | sed 's/\//-/g')
         echo "CHART_VALUES_NORMALIZED: ${CHART_VALUES_NORMALIZED}"
@@ -99,7 +101,7 @@ runs:
         scan-type: "config"
         hide-progress: true 
         format: "json"
-        scan-ref: "${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}-${{ steps.set-values.outputs.chart_values_normalized }}.yaml"
+        scan-ref: "${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.yaml"
         output: "helm-${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}-${{ steps.set-values.outputs.chart_values_normalized }}.json"
         severity: "CRITICAL" #QG только по критам
         exit-code: 2 # роняем джобу с кодом 2
@@ -120,7 +122,7 @@ runs:
         scan-type: "config"
         hide-progress: true
         format: "template"
-        scan-ref: "${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}-${{ steps.set-values.outputs.chart_values_normalized }}.yaml"
+        scan-ref: "${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.yaml"
         template: "@$HOME/.local/bin/trivy-bin/contrib/html.tpl"
         output: "helm-${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}-${{ steps.set-values.outputs.chart_values_normalized }}.html"
         exit-code: 0 # не роняем джобу
