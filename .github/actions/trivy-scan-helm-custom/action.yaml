@@ -73,6 +73,12 @@ runs:
 
         echo "Trivy config policy: ${{ inputs.CHART_FOLDER }}/.trivy.yaml"
         echo "Trivy ignore file: ${{ inputs.CHART_FOLDER }}/.trivyignore"
+
+        rm .trivy.yaml
+        rm .trivyignore
+
+        cp ${{ inputs.CHART_FOLDER }}/.trivy.yaml .trivy.yaml
+        cp ${{ inputs.CHART_FOLDER }}/.trivyignore .trivyignore
     
     - name: Run Trivy (JSON report)
       #джоба падает при старте по событию тега (актуально для продовых воркфлоу в продуктовых репах) и при пуше в main
@@ -87,8 +93,6 @@ runs:
         output: "helm-${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.json"
         severity: "CRITICAL" #QG только по критам
         exit-code: 2 # роняем джобу с кодом 2
-        config-policy: "${{ inputs.CHART_FOLDER }}/.trivy.yaml"
-        ignorefile: "${{ inputs.CHART_FOLDER }}/.trivyignore"
     
     - name: Upload Trivy (JSON report)
       if: always()
