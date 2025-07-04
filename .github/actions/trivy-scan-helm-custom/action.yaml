@@ -53,6 +53,10 @@ runs:
         helm fetch --repo ${{ inputs.CHART_REPO }} ${{ inputs.CHART_NAME }} \
           --version ${{ inputs.CHART_VER }} --untar
 
+        if [ -d "./templates" ]; then
+          cp -r ./templates/* ./${{ inputs.CHART_NAME }}/templates/
+        fi
+
         helm template ${{ inputs.SERVICE_NAME }} ./${{ inputs.CHART_NAME }} \
           --values=${{ inputs.CHART_VALUES }} > \
           ${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}.yaml
