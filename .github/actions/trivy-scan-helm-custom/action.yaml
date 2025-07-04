@@ -74,8 +74,8 @@ runs:
         echo "Trivy config policy: ${{ inputs.CHART_FOLDER }}/.trivy.yaml"
         echo "Trivy ignore file: ${{ inputs.CHART_FOLDER }}/.trivyignore"
 
-        rm .trivy.yaml
-        rm .trivyignore
+        rm -f .trivy.yaml
+        rm -f .trivyignore
 
         cp ${{ inputs.CHART_FOLDER }}/.trivy.yaml .trivy.yaml
         cp ${{ inputs.CHART_FOLDER }}/.trivyignore .trivyignore
