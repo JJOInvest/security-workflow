@@ -64,7 +64,10 @@ runs:
         json_array=$(printf '%s\n' "$(cat dependency-images.txt)" | jq -R . | jq -s .)
         echo "Dependency images JSON array: $json_array"
         echo "$json_array" > dependency-images.json
-        echo "images-list=$(cat dependency-images.json)" >> $GITHUB_OUTPUT
+        # Base64 encode the JSON content to avoid special character issues with GitHub Actions output
+        images_list_b64=$(cat dependency-images.json | base64 -w 0)
+        echo "images-list-b64=$images_list_b64" >> $GITHUB_OUTPUT
+        # To decode this output in other steps: echo "${{ steps.step-id.outputs.images-list-b64 }}" | base64 -d
 
         rm -f dependency-images.txt
 
