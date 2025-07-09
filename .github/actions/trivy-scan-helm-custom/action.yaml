@@ -57,6 +57,9 @@ runs:
           --values=${{ inputs.CHART_VALUES }} > \
           ${{ inputs.SERVICE_NAME }}.yaml
 
+        ${{ inputs.SERVICE_NAME }}.yaml | grep 'image:' > image.txt
+        echo "image.txt: $(cat image.txt)"
+
     - name: Set values variable
       id: set-values
       shell: bash
