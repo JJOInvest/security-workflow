@@ -59,12 +59,12 @@ runs:
         grep 'image:' ${{ inputs.SERVICE_NAME }}.yaml | while read -r line; do
           echo "$line" | sed -n 's/[[:space:]]*image:[[:space:]]*\(.*\)/\1/p'
         done > dependency-images.txt
-        echo "dependency-images.txt: $(cat dependency-images.txt)" > dependency-images.txt
 
         # Read all lines and create JSON array
         json_array=$(printf '%s\n' "$(cat dependency-images.txt)" | jq -R . | jq -s .)
         echo "Dependency images JSON array: $json_array"
         echo "$json_array" > dependency-images.json
+        echo "images-list=$(cat dependency-images.json)" >> $GITHUB_OUTPUT
 
         rm -f dependency-images.txt
 
