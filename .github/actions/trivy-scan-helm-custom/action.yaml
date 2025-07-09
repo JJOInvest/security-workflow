@@ -99,7 +99,7 @@ runs:
         hide-progress: true 
         format: "json"
         scan-ref: "${{ inputs.CHART_FOLDER }}/${{ inputs.SERVICE_NAME }}.yaml"
-        output: "helm-${{ inputs.SERVICE_NAME }}-${{ inputs.CHART_NAME }}-${{ inputs.CHART_VER }}-${{ steps.set-values.outputs.chart_values_normalized }}.json"
+        output: "helm-${{ inputs.SERVICE_NAME }}-${{ steps.set-values.outputs.chart_values_normalized }}.json"
         severity: "CRITICAL" #QG только по критам
         exit-code: 2 # роняем джобу с кодом 2
     
