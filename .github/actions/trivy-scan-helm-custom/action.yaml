@@ -52,6 +52,9 @@ runs:
     - name: Convert dependency images to JSON array
       shell: bash
       run: |
+        # Go to charts folder
+        cd ${{ inputs.CHART_FOLDER }}
+
         # Extract images from the service yaml
         grep 'image:' ${{ inputs.SERVICE_NAME }}.yaml | while read -r line; do
           echo "$line" | sed -n 's/[[:space:]]*image:[[:space:]]*\(.*\)/\1/p'
