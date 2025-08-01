@@ -44,8 +44,12 @@ runs:
         rm -f .trivy.yaml
         rm -f .trivyignore
 
-        cp ${{ inputs.CHART_FOLDER }}/.trivy.yaml .trivy.yaml
-        cp ${{ inputs.CHART_FOLDER }}/.trivyignore .trivyignore
+        if [ -f "${{ inputs.CHART_FOLDER }}/.trivy.yaml" ]; then
+          cp ${{ inputs.CHART_FOLDER }}/.trivy.yaml .trivy.yaml
+        fi
+        if [ -f "${{ inputs.CHART_FOLDER }}/.trivyignore" ]; then
+          cp ${{ inputs.CHART_FOLDER }}/.trivyignore .trivyignore
+        fi
 
         cd ${{ inputs.CHART_FOLDER }}
         helm dependency build
